@@ -1,0 +1,15 @@
+{
+  "rust-analyzer.linkedProjects": [
+    "./Cargo.toml"
+  ],
+  "rest-client.environmentVariables": {
+    "$shared": {},
+    "local": {
+      "hostname": "localhost",
+      "port": "3000",
+    },
+    "production": {
+      "hostname": "example.com",
+    }
+  }
+}
