@@ -4,7 +4,6 @@ mod rand {
     use std::io::Read;
     use std::sync::OnceLock;
 
-
     // delete
     trait Draw {
         fn draw(&self);
@@ -30,7 +29,7 @@ mod rand {
     }
 
     struct Screen {
-        components: Vec<Box<dyn Draw>>
+        components: Vec<Box<dyn Draw>>,
     }
     // ^ delete
 
@@ -61,7 +60,7 @@ mod rand {
 
     pub struct RandomHex<'a> {
         urandom: &'a File,
-        length: usize
+        length: usize,
     }
 
     // trait TraitName {
@@ -70,9 +69,9 @@ mod rand {
 
     impl<'a> RandomHex<'a> {
         pub fn new(length: usize) -> Self {
-            RandomHex { 
+            RandomHex {
                 urandom: static_open_urandom(),
-                length
+                length,
             }
         }
     }
@@ -83,13 +82,16 @@ mod rand {
         type IntoIter = RandomHexIterator<'a>;
 
         fn into_iter(self) -> Self::IntoIter {
-            RandomHexIterator { urandom: self.urandom, length: self.length }
+            RandomHexIterator {
+                urandom: self.urandom,
+                length: self.length,
+            }
         }
     }
 
     pub struct RandomHexIterator<'a> {
         urandom: &'a File,
-        length: usize
+        length: usize,
     }
 
     impl<'a> Iterator for RandomHexIterator<'a> {
@@ -97,7 +99,9 @@ mod rand {
 
         fn next(&mut self) -> Option<Self::Item> {
             let mut buffer = vec![0u8; self.length];
-            self.urandom.read_exact(&mut buffer).expect("read urandom failed");
+            self.urandom
+                .read_exact(&mut buffer)
+                .expect("read urandom failed");
 
             //buffer
             //     .iter()
@@ -109,14 +113,11 @@ mod rand {
             let symbols = buffer
                 .iter()
                 .map(|byte| format!("{:02x?}", byte))
-                .fold(String::new(), |acc, hexes| {
-                    acc + &hexes
-                });
+                .fold(String::new(), |acc, hexes| acc + &hexes);
 
             Some(symbols)
         }
     }
-
 }
 
 #[cfg(test)]
@@ -166,17 +167,17 @@ mod tests {
         // println!("{}", sym);
 
         let rnd = RandomHex::new(16);
-        
+
         for p in rnd.into_iter().take(3) {
             println!("{p}");
         }
-        
+
         // for p in rnd.iter().take(3) {
         //     println!("{p}");
         // }
 
         let rnd = RandomHex::new(16);
-        
+
         let mut i = 0;
         for p in rnd {
             if i > 2 {
@@ -185,8 +186,5 @@ mod tests {
             println!("{p}");
             i += 1;
         }
-
-
     }
-
 }

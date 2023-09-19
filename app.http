@@ -1,20 +1,38 @@
 # @hostname = 127.0.0.1
 # @port = 3000
 @host = {{hostname}}:{{port}}
+@baseUrl = http://{{host}}
 
 ###
-@path = hello
 
-GET http://{{host}}/{{path}}?name=Xenia HTTP/1.1
+GET {{baseUrl}}/hello?name=Xenia HTTP/1.1
 content-type: application/json
 
 ###
-@path = auth/login
+# @name Login
 
-POST http://{{host}}/{{path}} HTTP/1.1
+POST {{baseUrl}}/auth/login HTTP/1.1
 content-type: application/json
 
 {
     "email": "demo",
     "password": "test"
+}
+
+###
+
+@authCookie = {{Login.response.headers.set-cookie}}
+
+GET {{baseUrl}}/tickets HTTP/1.1
+# Cookie: {{authCookie}}
+
+###
+
+@authCookie = {{Login.response.headers.set-cookie}}
+
+POST {{baseUrl}}/tickets HTTP/1.1
+content-type: application/json
+
+{
+    "title": "demo ticket"
 }

@@ -13,7 +13,7 @@ fn get_client() -> &'static Client {
 #[ignore]
 #[tokio::test]
 async fn router_hello() -> anyhow::Result<()> {
-    let addr = SocketAddr::from((ADDR_URL, ADDR_PORT));
+    let addr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
     let url = format!("http://{:#?}/hello", addr);
 
@@ -27,7 +27,7 @@ async fn router_hello() -> anyhow::Result<()> {
 #[ignore]
 #[tokio::test]
 async fn router_hello_query() -> anyhow::Result<()> {
-    let addr = SocketAddr::from((ADDR_URL, ADDR_PORT));
+    let addr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
     let url = format!("http://{:#?}/hello?name=Xenia", addr);
 
@@ -40,7 +40,7 @@ async fn router_hello_query() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn router_hello_path() -> anyhow::Result<()> {
-    let addr = SocketAddr::from((ADDR_URL, ADDR_PORT));
+    let addr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
     let url = format!("http://{:#?}/hello2/xenia", addr);
 

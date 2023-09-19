@@ -1,13 +1,15 @@
 use std::net::SocketAddr;
-use std::sync::{OnceLock, Arc}; // use LazyLock::new(|| Client::new())
+use std::sync::{Arc, OnceLock}; // use LazyLock::new(|| Client::new())
 
-use axum_full_course::infrastructure::login::{dto::LoginDto, AUTH_TOKEN};
+use axum_full_course::infrastructure::auth::{dto::LoginDto, AUTH_TOKEN};
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 
-use axum::http::{StatusCode, HeaderValue};
-use reqwest::cookie::{CookieStore};
+use axum::http::{HeaderValue, StatusCode};
+use reqwest::cookie::CookieStore;
 use reqwest::header::SET_COOKIE;
-use reqwest::{Client, ClientBuilder, cookie, IntoUrl};
+use reqwest::{cookie, Client, ClientBuilder, IntoUrl, Response};
+
+static ADDR: SocketAddr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
 // static CLIENT: OnceLock<Client> = OnceLock::new();
 
@@ -15,18 +17,19 @@ use reqwest::{Client, ClientBuilder, cookie, IntoUrl};
 //     CLIENT.get_or_init(|| Client::new())
 // }
 
+fn print_resp(resp: &Response) {
+    println!("{:#?}", resp.headers());
+    println!("{:#?}", resp.cookies().collect::<Vec<_>>());
+}
+
 #[tokio::test]
 async fn should_login() -> anyhow::Result<()> {
-    let addr = SocketAddr::from((ADDR_URL, ADDR_PORT));
-
-    let url: reqwest::Url = format!("http://{:#?}/auth/login", addr).parse()?;
+    let url: reqwest::Url = format!("http://{:#?}/auth/login", ADDR).parse()?;
 
     let cookie_provider = Arc::new(cookie::Jar::default());
-    // let cookie_provider = 
 
     let client = ClientBuilder::new()
-        // .host
-        // .cookie_store(true)
+        .cookie_store(true)
         .cookie_provider(cookie_provider.clone())
         .build()?;
 
@@ -40,66 +43,15 @@ async fn should_login() -> anyhow::Result<()> {
         .await?;
 
     assert_eq!(resp.status(), StatusCode::OK);
+    print_resp(&resp);
 
-    // let auth_cookie = resp.cookies().find(|c| c.name() == AUTH_TOKEN);
-    // println!("domain {}", &url.host_str().unwrap());
+    let url: reqwest::Url = format!("http://{:#?}/hello", ADDR).parse()?;
 
-    // let cookies_domains = &cookie_provider.;
-    let cookie = &cookie_provider.cookies(&url);
-    println!("{} {:?}", &url, cookie);
-
-
-// /    let dom = auth_cookie.as_ref().unwrap().domain();
-
-    // dom
-
-    // println!("{:?}", auth_cookie.as_ref().map(|c| c.value()));
-
-
-    // let resp = client
-    //     .post(url)
-    //     .json(&LoginDto {
-    //         email: "demo".to_string(),
-    //         password: "test".to_string(),
-    //     })
-    //     .send()
-    //     .await?;
-
-
-    let url: reqwest::Url = format!("http://{:#?}/hello", addr).parse()?;
-
-    
-    // let url = format!("http://{:#?}/hello", addr);
-    // println!("{:?}", resp.cookies().collect::<Vec<_>>());
-
-    fn extract_response_cookie_headers<'a>(
-        headers: &'a axum::http::HeaderMap,
-    ) -> impl Iterator<Item = &'a HeaderValue> + 'a {
-        headers.get_all(SET_COOKIE).iter()
-    }
-
-    // It doesn't work otherwise
-    let mut cookies =
-        extract_response_cookie_headers(&resp.headers()).peekable();
-    if cookies.peek().is_some() {
-        cookie_provider.set_cookies(&mut cookies, &url);
-    }
-
-
-    let cookie = &cookie_provider.cookies(&url);
-    println!("{} {:?}", &url, cookie);
-
-    // let cookie = &cookie_provider.set_cookies(&url);
+    // let cookie = &cookie_provider.cookies(&url);
     // println!("{} {:?}", &url, cookie);
-    
-    let get = client.get(url);
-    // println!("{}", get.);
-    let resp = get.send().await?;
-    
-    // let auth_cookie = resp.cookies().find(|c| c.name() == AUTH_TOKEN);
 
-    // println!("{:?}", auth_cookie.as_ref().map(|c| c.value()));
-    // println!("{:?}", resp.cookies().collect::<Vec<_>>());
+    let resp = client.get(url).send().await?;
+    print_resp(&resp);
 
     Ok(())
 }
@@ -107,9 +59,7 @@ async fn should_login() -> anyhow::Result<()> {
 #[ignore]
 #[tokio::test]
 async fn should_not_login() -> anyhow::Result<()> {
-    let addr = SocketAddr::from((ADDR_URL, ADDR_PORT));
-
-    let url = format!("http://{:#?}/auth/login", addr);
+    let url = format!("http://{:#?}/auth/login", ADDR);
 
     let resp = Client::new()
         .post(url)
