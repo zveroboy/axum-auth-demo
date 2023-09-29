@@ -5,7 +5,7 @@ use axum::extract::{FromRef, Path, State};
 use axum::http::StatusCode;
 use axum::routing::{delete, post};
 use axum::{Json, Router};
-use tracing::info;
+use tracing::{debug, info};
 
 use super::dto::TicketDto;
 
@@ -18,11 +18,13 @@ async fn handle_create_ticket(
     UserCtx { user_id }: UserCtx,
     State(mut ticket_service): State<TicketService>,
     Json(dto): Json<TicketDto>,
-) -> Result<Json<Ticket>> {
-    let ticket = ticket_service.create_ticket(CreateTicket {
-        creator_id: user_id,
-        title: dto.title
-    }).await;
+) -> Result<Json<i64>> {
+    let ticket = ticket_service
+        .create_ticket(CreateTicket {
+            creator_id: user_id,
+            title: dto.title,
+        })
+        .await;
     info!("ticket added {:?}", ticket);
     ticket.map(|t| Json(t))
 }
@@ -31,6 +33,7 @@ async fn handle_list_tickets(
     _user_ctx: UserCtx,
     State(ticket_service): State<TicketService>,
 ) -> Result<Json<Vec<Ticket>>> {
+    debug!(user_id = _user_ctx.user_id);
     let tickets = ticket_service.list_tickets().await;
     tickets.map(|t| Json(t))
 }

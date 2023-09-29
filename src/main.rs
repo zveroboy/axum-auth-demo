@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use axum_full_course::domain::errors::Result;
-use axum_full_course::infrastructure::app::app_router;
+use axum_full_course::infrastructure::app_router::app_router;
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -18,10 +18,10 @@ async fn main() -> Result<()> {
                 "axum_full_course=debug,tower_http=debug,axum::rejection=trace".into()
             }),
         )
-        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_target(false))
         .init();
 
-    let router_all = app_router();
+    let router_all = app_router().await;
 
     info!("LISTENING {addr}", addr = ADDR);
 

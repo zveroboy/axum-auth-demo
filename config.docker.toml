@@ -1,0 +1,7 @@
+[env]
+PGUSER="postgres"
+PGHOST="localhost"
+PGPASSWORD="postgres"
+PGDATABASE="postgres"
+PGPORT="5532"
+PORT="3000"

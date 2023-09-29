@@ -1,15 +1,21 @@
-use crate::domain::model::TicketService;
+use std::sync::Arc;
+
 use axum::extract::{Path, Query};
 use axum::middleware;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
 use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
 use tracing::info;
 
+use crate::domain::model::TicketService;
+
+use super::auth::middleware::auth_resolver;
+use super::static_router::static_router;
+use super::store::new_db_pool;
 use super::ticket::router::TicketAppState;
-use super::{auth, ticket};
+use super::ticket::service::PgTicketRepository;
+use super::{auth, config, ticket};
 
 // #[derive(Deserialize, Debug)]
 // struct DemoParams {
@@ -100,11 +106,16 @@ pub fn hello_router() -> Router {
         .route("/hello2/:name", get(handle_hello_named))
 }
 
-pub fn static_router() -> Router {
-    Router::new().nest_service("/", ServeDir::new("./"))
-}
+pub async fn app_router() -> Router {
+    let config = config::get_config();
+    let db = new_db_pool(config.db.get_connection(), 1)
+        .await
+        .expect("Unable to connect to create db pool");
 
-pub fn app_router() -> Router {
+    let ticket_state = TicketAppState {
+        ticket_service: TicketService::new(Arc::new(PgTicketRepository::new(db))),
+    };
+
     Router::new()
         .merge(hello_router())
         .nest("/auth", auth::router::auth_router())
@@ -113,13 +124,12 @@ pub fn app_router() -> Router {
             "/tickets",
             ticket::router::create_ticket_router()
                 // .route_layer(middleware::from_fn(auth::middleware::require_auth))
-                .with_state(TicketAppState {
-                    ticket_service: TicketService::new(),
-                }),
+                .with_state(ticket_state),
         )
         .layer(middleware::map_response(
             super::middleware::main_response_mapper,
-        )) // middleware call order: 1
+        ))
+        .layer(middleware::from_fn(auth_resolver)) // middleware call order: 1
         .layer(CookieManagerLayer::new()) // middleware call order: 0
         .layer(
             tower_http::trace::TraceLayer::new_for_http()

@@ -1,3 +1,4 @@
 [env]
 
 RUST_LOG="debug"
+SERVICE_WEB_FOLDER="public/"

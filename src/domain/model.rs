@@ -1,7 +1,9 @@
-use std::sync::Arc;
-
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::sync::Mutex;
+
+use super::errors::Result;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Ticket {
@@ -16,35 +18,40 @@ pub struct CreateTicket {
     pub title: String,
 }
 
+#[async_trait]
+pub trait TicketRepository: Sync + Send {
+    async fn add(&self, ticket: CreateTicket) -> Result<i64>;
+}
+
 #[derive(Clone)]
 pub struct TicketService {
     ticket_store: Arc<Mutex<Vec<Ticket>>>,
+    ticket_repository: Arc<dyn TicketRepository>,
 }
 
 impl TicketService {
-    pub fn new() -> Self {
+    pub fn new(ticket_repository: Arc<dyn TicketRepository>) -> Self {
         TicketService {
             ticket_store: Arc::default(),
+            ticket_repository: ticket_repository,
         }
     }
 }
 
 impl TicketService {
-    pub async fn create_ticket(
-        &mut self,
-        CreateTicket { title, creator_id }: CreateTicket,
-    ) -> super::errors::Result<Ticket> {
-        let mut store = self.ticket_store.lock().await;
+    pub async fn create_ticket(&mut self, ticket: CreateTicket) -> super::errors::Result<i64> {
+        // let mut store = self.ticket_store.lock().await;
 
-        let ticket = Ticket {
-            id: store.len() as u32 + 1,
-            title,
-            creator_id,
-        };
+        // let ticket = Ticket {
+        //     title,
+        //     creator_id,
+        // };
 
-        store.push(ticket.clone());
+        Ok(self.ticket_repository.add(ticket).await?)
 
-        Ok(ticket)
+        // store.push(ticket.clone());
+
+        // Ok(0)
     }
 
     pub async fn list_tickets(&self) -> super::errors::Result<Vec<Ticket>> {

@@ -3,11 +3,17 @@ name = "axum-full-course"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "dev_db"
+path = "src/dev_db.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.75"
-
 tokio = { version = "1.32.0", features = ["full"] }
 
 serde = { version = "1.0.188", features = ["derive"] }
@@ -20,7 +26,12 @@ lazy-regex = "3.0.2"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 async-trait = "0.1.73"
-
+strum_macros = "0.25.2"
+uuid = { version = "1.4.1", features = ["v4"] }
+sqlx = { version = "0.7.1", features = ["postgres", "uuid", "time", "runtime-tokio-rustls"] }
+tokio-stream = "0.1.14"
+futures = "0.3.28"
 
 [dev-dependencies]
+anyhow = "1.0.75"
 reqwest = { version = "0.11.20", features = ["json", "cookies"] }
