@@ -19,26 +19,26 @@ pub struct CreateTicket {
 }
 
 #[async_trait]
-pub trait TicketRepository: Sync + Send {
+pub trait TicketRepository: Sync + Send + Clone {
     async fn add(&self, ticket: CreateTicket) -> Result<i64>;
 }
 
 #[derive(Clone)]
-pub struct TicketService {
+pub struct TicketService<TR> {
     ticket_store: Arc<Mutex<Vec<Ticket>>>,
-    ticket_repository: Arc<dyn TicketRepository>,
+    ticket_repository: TR,
 }
 
-impl TicketService {
-    pub fn new(ticket_repository: Arc<dyn TicketRepository>) -> Self {
+impl<TR: TicketRepository> TicketService<TR> {
+    pub fn new(ticket_repository: TR) -> Self {
         TicketService {
             ticket_store: Arc::default(),
-            ticket_repository: ticket_repository,
+            ticket_repository,
         }
     }
 }
 
-impl TicketService {
+impl<TR: TicketRepository> TicketService<TR> {
     pub async fn create_ticket(&mut self, ticket: CreateTicket) -> super::errors::Result<i64> {
         // let mut store = self.ticket_store.lock().await;
 

@@ -17,6 +17,8 @@ use super::ticket::router::TicketAppState;
 use super::ticket::service::PgTicketRepository;
 use super::{auth, config, ticket};
 
+// region: Hello world
+
 // #[derive(Deserialize, Debug)]
 // struct DemoParams {
 //     // name: Option<&'a str>,
@@ -106,6 +108,9 @@ pub fn hello_router() -> Router {
         .route("/hello2/:name", get(handle_hello_named))
 }
 
+// endregion: Hello world
+
+// Composition root
 pub async fn app_router() -> Router {
     let config = config::get_config();
     let db = new_db_pool(config.db.get_connection(), 1)
@@ -113,7 +118,7 @@ pub async fn app_router() -> Router {
         .expect("Unable to connect to create db pool");
 
     let ticket_state = TicketAppState {
-        ticket_service: TicketService::new(Arc::new(PgTicketRepository::new(db))),
+        ticket_service: TicketService::new(PgTicketRepository::new(db)),
     };
 
     Router::new()
@@ -122,7 +127,7 @@ pub async fn app_router() -> Router {
         // .layer(middleware::from_fn(add_auth_ctx))
         .nest(
             "/tickets",
-            ticket::router::create_ticket_router()
+            ticket::router::ticket_router()
                 // .route_layer(middleware::from_fn(auth::middleware::require_auth))
                 .with_state(ticket_state),
         )
