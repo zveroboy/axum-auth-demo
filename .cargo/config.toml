@@ -1,4 +1,7 @@
-[env]
 
+[alias]
+run-main = "run -q --bin main --config config.docker.toml"
+
+[env]
 RUST_LOG="debug"
 SERVICE_WEB_FOLDER="public/"
