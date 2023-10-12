@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use axum_full_course::domain::errors::Result;
 use axum_full_course::infrastructure::app_router::app_router;
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 use tracing::info;
@@ -9,7 +8,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 static ADDR: SocketAddr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
@@ -21,7 +20,7 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer().with_target(false))
         .init();
 
-    let router_all = app_router().await;
+    let router_all = app_router().await?;
 
     info!("LISTENING {addr}", addr = ADDR);
 

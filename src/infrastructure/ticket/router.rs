@@ -1,6 +1,6 @@
-use crate::domain::errors::Result;
-use crate::domain::model::{CreateTicket, Ticket, TicketRepository, TicketService};
-use crate::infrastructure::auth::context::ctx::UserCtx;
+use crate::domain::ticket::ticket::{CreateTicket, Ticket, TicketRepository, TicketService};
+use crate::infrastructure::context::ctx::UserCtx;
+use crate::infrastructure::middleware::error::ClientError;
 use axum::extract::{FromRef, Path, State};
 use axum::http::StatusCode;
 use axum::routing::{delete, post};
@@ -24,30 +24,30 @@ async fn handle_create_ticket<TR>(
     UserCtx { user_id }: UserCtx,
     State(mut ticket_service): State<TicketService<TR>>,
     Json(dto): Json<TicketDto>,
-) -> Result<Json<i64>>
+) -> Result<Json<i64>, ClientError>
 where
     TR: TicketRepository,
 {
-    let ticket = ticket_service
+    let ticket_id = ticket_service
         .create_ticket(CreateTicket {
             creator_id: user_id,
             title: dto.title,
         })
-        .await;
-    info!("ticket added {:?}", ticket);
-    ticket.map(|t| Json(t))
+        .await?;
+    info!("ticket added {:?}", ticket_id);
+    Ok(ticket_id.into())
 }
 
 async fn handle_list_tickets<TR>(
     _user_ctx: UserCtx,
     State(ticket_service): State<TicketService<TR>>,
-) -> Result<Json<Vec<Ticket>>>
+) -> Result<Json<Vec<Ticket>>, ClientError>
 where
     TR: TicketRepository,
 {
     debug!(user_id = _user_ctx.user_id);
-    let tickets = ticket_service.list_tickets().await;
-    tickets.map(|t| Json(t))
+    let tickets = ticket_service.list_tickets().await?;
+    Ok(tickets.into())
 }
 
 async fn handle_delete_ticket<TR>(

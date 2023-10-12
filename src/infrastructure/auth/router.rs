@@ -1,19 +1,23 @@
 use crate::domain::errors::Error;
+use crate::infrastructure::middleware::error::ClientError;
+use crate::infrastructure::middleware::AUTH_TOKEN;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use tower_cookies::{Cookie, Cookies};
 
-async fn handle_login(cookies: Cookies, dto: Json<super::dto::LoginDto>) -> impl IntoResponse {
+async fn handle_login(
+    cookies: Cookies,
+    dto: Json<super::dto::LoginDto>,
+) -> Result<StatusCode, ClientError> {
     // TODO: move to domain
     if dto.email != "demo" || dto.password != "test" {
-        return Err(Error::LoginFail);
+        return { Err(Error::LoginFail) }?;
     }
 
     // FIXME:
     cookies.add(
-        Cookie::build(crate::infrastructure::auth::AUTH_TOKEN, "user:321.123.456")
+        Cookie::build(AUTH_TOKEN, "user:321.123.456")
             .path("/")
             .finish(),
     );

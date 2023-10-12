@@ -5,16 +5,17 @@ use lazy_regex::regex_captures;
 use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 
-use crate::domain::errors::{Error, Result};
-use crate::infrastructure::auth::AUTH_TOKEN;
+use super::AUTH_TOKEN;
+use crate::domain::errors::Error;
+use crate::infrastructure::middleware::error::ClientError;
 
-use super::context::ctx::UserCtx;
+use crate::infrastructure::context::ctx::UserCtx;
 
 pub async fn auth_resolver<B>(
     cookies: Cookies,
     mut req: Request<B>,
     next: Next<B>,
-) -> Result<Response> {
+) -> Result<Response, ClientError> {
     let auth_cookie = cookies.get(AUTH_TOKEN).ok_or(Error::AuthCookieIsEmpty)?;
     let result_ctx = parse_auth(auth_cookie.value()).map(|(user_id, _, _)| UserCtx::new(user_id));
 
@@ -27,7 +28,7 @@ pub async fn auth_resolver<B>(
     Ok(next.run(req).await)
 }
 
-fn parse_auth(token: &str) -> Result<(u32, String, String)> {
+fn parse_auth(token: &str) -> Result<(u32, String, String), ClientError> {
     debug!(token);
 
     // user-<user_id>.<expiration>.<signature>

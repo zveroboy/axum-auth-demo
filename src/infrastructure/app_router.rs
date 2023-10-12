@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::extract::{Path, Query};
 use axum::middleware;
 use axum::response::{Html, IntoResponse};
@@ -8,9 +6,11 @@ use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
 
-use crate::domain::model::TicketService;
+use crate::domain::errors::Error;
+use crate::domain::ticket::ticket::TicketService;
 
-use super::auth::middleware::auth_resolver;
+use super::middleware::error::ClientError;
+use super::middleware::user::auth_resolver;
 use super::static_router::static_router;
 use super::store::new_db_pool;
 use super::ticket::router::TicketAppState;
@@ -76,6 +76,14 @@ use super::{auth, config, ticket};
 struct HelloParams {
     name: Option<String>,
 }
+async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
+    // State(user_repo): State<DynUserRepo>,
+) -> Result<String, ClientError> {
+    // let user = user_repo.find(user_id).await?;
+
+    // Ok(user.into())
+    { Err(Error::LoginFail) }?
+}
 
 // #[axum::debug_handler]
 // #[tracing::instrument(name="handle_hello")]
@@ -102,7 +110,7 @@ pub fn hello_router() -> Router {
     let router = Router::new();
 
     router
-        // .route("/demo", get(hello_demo_handler))
+        .route("/demo", get(hello_demo_handler))
         // .route("/hello2/:name", get(hello_named_handler))
         .route("/hello", get(handle_hello))
         .route("/hello2/:name", get(handle_hello_named))
@@ -111,20 +119,17 @@ pub fn hello_router() -> Router {
 // endregion: Hello world
 
 // Composition root
-pub async fn app_router() -> Router {
+pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
     let config = config::get_config();
-    let db = new_db_pool(config.db.get_connection(), 1)
-        .await
-        .expect("Unable to connect to create db pool");
+    let db = new_db_pool(config.db.get_connection(), 1).await?;
 
     let ticket_state = TicketAppState {
         ticket_service: TicketService::new(PgTicketRepository::new(db)),
     };
 
-    Router::new()
+    Ok(Router::new()
         .merge(hello_router())
         .nest("/auth", auth::router::auth_router())
-        // .layer(middleware::from_fn(add_auth_ctx))
         .nest(
             "/tickets",
             ticket::router::ticket_router()
@@ -132,7 +137,7 @@ pub async fn app_router() -> Router {
                 .with_state(ticket_state),
         )
         .layer(middleware::map_response(
-            super::middleware::main_response_mapper,
+            super::middleware::request_id::set_request_id,
         ))
         .layer(middleware::from_fn(auth_resolver)) // middleware call order: 1
         .layer(CookieManagerLayer::new()) // middleware call order: 0
@@ -162,5 +167,5 @@ pub async fn app_router() -> Router {
                 .on_request(())
                 .on_response(()),
         )
-        .fallback_service(static_router())
+        .fallback_service(static_router()))
 }

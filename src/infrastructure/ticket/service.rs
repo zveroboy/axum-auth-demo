@@ -1,5 +1,5 @@
 use crate::domain::errors::Result;
-use crate::domain::model::{CreateTicket, TicketRepository};
+use crate::domain::ticket::ticket::{CreateTicket, TicketRepository};
 use crate::infrastructure::store::Db;
 use async_trait::async_trait;
 

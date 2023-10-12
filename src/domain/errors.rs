@@ -1,6 +1,5 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use strum_macros::AsRefStr;
 use tracing::info;
 
 // region: -- Error
@@ -14,22 +13,6 @@ pub enum Error {
     AuthCookieWrongFormat,
 
     EntityNotFound { id: String },
-}
-
-impl Error {
-    pub fn client_status_code_and_error(&self) -> (StatusCode, ClientError) {
-        match self {
-            Self::LoginFail => (StatusCode::FORBIDDEN, ClientError::LOGIN_FAIL),
-            Self::AuthIsNotProvided | Self::AuthCookieIsEmpty | Self::AuthCookieWrongFormat => {
-                (StatusCode::FORBIDDEN, ClientError::NO_AUTH)
-            }
-            Self::EntityNotFound { .. } => (StatusCode::NOT_FOUND, ClientError::NOT_FOUND),
-            _ => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ClientError::SERVICE_ERROR,
-            ),
-        }
-    }
 }
 
 impl std::fmt::Display for Error {
@@ -49,28 +32,18 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        info!("{:<12} - {self:?}", "INTO_RES");
+// impl IntoResponse for Error {
+//     fn into_response(self) -> Response {
+//         info!("{:<12} - {self:?}", "INTO_RES");
 
-        let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+//         let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
 
-        response.extensions_mut().insert(self);
+//         response.extensions_mut().insert(self);
 
-        response
-    }
-}
+//         response
+//     }
+// }
 
 // endregion: -- Error
 
 pub type Result<T> = core::result::Result<T, Error>;
-
-#[derive(AsRefStr, Debug, Clone, Copy)]
-#[allow(non_camel_case_types)]
-pub enum ClientError {
-    LOGIN_FAIL,
-    NO_AUTH,
-    NOT_FOUND,
-    INVALID_PARAMS,
-    SERVICE_ERROR,
-}

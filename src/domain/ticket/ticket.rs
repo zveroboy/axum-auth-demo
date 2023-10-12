@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use super::errors::Result;
+use crate::domain::errors::{Error, Result};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Ticket {
@@ -39,7 +39,7 @@ impl<TR: TicketRepository> TicketService<TR> {
 }
 
 impl<TR: TicketRepository> TicketService<TR> {
-    pub async fn create_ticket(&mut self, ticket: CreateTicket) -> super::errors::Result<i64> {
+    pub async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64> {
         // let mut store = self.ticket_store.lock().await;
 
         // let ticket = Ticket {
@@ -54,7 +54,7 @@ impl<TR: TicketRepository> TicketService<TR> {
         // Ok(0)
     }
 
-    pub async fn list_tickets(&self) -> super::errors::Result<Vec<Ticket>> {
+    pub async fn list_tickets(&self) -> Result<Vec<Ticket>> {
         let store = self.ticket_store.lock().await;
 
         let tickets = store.clone();
@@ -62,13 +62,13 @@ impl<TR: TicketRepository> TicketService<TR> {
         Ok(tickets)
     }
 
-    pub async fn delete_ticket(&mut self, id: u32) -> super::errors::Result<()> {
+    pub async fn delete_ticket(&mut self, id: u32) -> Result<()> {
         let mut store = self.ticket_store.lock().await;
 
         let index_to_delete = store
             .iter()
             .position(|t| t.id == id)
-            .ok_or(super::errors::Error::EntityNotFound { id: id.to_string() })?;
+            .ok_or(Error::EntityNotFound { id: id.to_string() })?;
 
         store.remove(index_to_delete);
 
