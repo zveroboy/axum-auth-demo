@@ -25,8 +25,6 @@ pub trait TicketRepository: Sync + Send + Clone {
 
 #[async_trait]
 pub trait TicketService {
-    type Repository;
-
     async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64>;
 
     async fn list_tickets(&self) -> Result<Vec<Ticket>>;
@@ -57,8 +55,6 @@ impl<TR> TicketService for BaseTicketService<TR>
 where
     TR: TicketRepository,
 {
-    type Repository = TR;
-
     async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64> {
         Ok(self.ticket_repository.add(ticket).await?)
     }
