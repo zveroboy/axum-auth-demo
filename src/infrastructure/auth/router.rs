@@ -1,4 +1,4 @@
-use crate::domain::errors::Error;
+use crate::domain::error::Error;
 use crate::infrastructure::middleware::error::ClientError;
 use crate::infrastructure::middleware::AUTH_TOKEN;
 use axum::http::StatusCode;

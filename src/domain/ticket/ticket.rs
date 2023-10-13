@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use crate::domain::errors::{Error, Result};
+use crate::domain::error::{Error, Result};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Ticket {
@@ -23,38 +23,47 @@ pub trait TicketRepository: Sync + Send + Clone {
     async fn add(&self, ticket: CreateTicket) -> Result<i64>;
 }
 
+#[async_trait]
+pub trait TicketService {
+    type Repository;
+
+    async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64>;
+
+    async fn list_tickets(&self) -> Result<Vec<Ticket>>;
+
+    async fn delete_ticket(&mut self, id: u32) -> Result<()>;
+}
+
 #[derive(Clone)]
-pub struct TicketService<TR> {
+pub struct BaseTicketService<TR> {
     ticket_store: Arc<Mutex<Vec<Ticket>>>,
     ticket_repository: TR,
 }
 
-impl<TR: TicketRepository> TicketService<TR> {
+impl<TR> BaseTicketService<TR>
+where
+    TR: TicketRepository,
+{
     pub fn new(ticket_repository: TR) -> Self {
-        TicketService {
+        Self {
             ticket_store: Arc::default(),
             ticket_repository,
         }
     }
 }
 
-impl<TR: TicketRepository> TicketService<TR> {
-    pub async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64> {
-        // let mut store = self.ticket_store.lock().await;
+#[async_trait]
+impl<TR> TicketService for BaseTicketService<TR>
+where
+    TR: TicketRepository,
+{
+    type Repository = TR;
 
-        // let ticket = Ticket {
-        //     title,
-        //     creator_id,
-        // };
-
+    async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64> {
         Ok(self.ticket_repository.add(ticket).await?)
-
-        // store.push(ticket.clone());
-
-        // Ok(0)
     }
 
-    pub async fn list_tickets(&self) -> Result<Vec<Ticket>> {
+    async fn list_tickets(&self) -> Result<Vec<Ticket>> {
         let store = self.ticket_store.lock().await;
 
         let tickets = store.clone();
@@ -62,7 +71,7 @@ impl<TR: TicketRepository> TicketService<TR> {
         Ok(tickets)
     }
 
-    pub async fn delete_ticket(&mut self, id: u32) -> Result<()> {
+    async fn delete_ticket(&mut self, id: u32) -> Result<()> {
         let mut store = self.ticket_store.lock().await;
 
         let index_to_delete = store

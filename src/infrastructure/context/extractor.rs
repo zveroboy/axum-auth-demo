@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 
-use crate::{domain::errors::Error, infrastructure::middleware::error::ClientError};
+use crate::domain::error::Error;
+use crate::infrastructure::middleware::error::ClientError;
 
 use super::ctx::UserCtx;
 

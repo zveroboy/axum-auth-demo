@@ -17,7 +17,7 @@ pub struct Config {
 
 impl Config {
     pub fn load_from_env() -> Self {
-        Config {
+        Self {
             web_folder: get_env_required("SERVICE_WEB_FOLDER"),
             db: DbConfig::new(),
         }

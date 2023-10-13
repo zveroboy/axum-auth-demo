@@ -6,9 +6,3 @@ pub struct User {
     pub id: i64,
     pub username: String,
 }
-
-#[derive(Deserialize)]
-pub struct LoginUser {
-    email: String,
-    password: String,
-}

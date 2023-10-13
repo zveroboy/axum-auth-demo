@@ -6,14 +6,13 @@ use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
 
-use crate::domain::errors::Error;
-use crate::domain::ticket::ticket::TicketService;
+use crate::domain::error::Error;
+use crate::domain::ticket::ticket::BaseTicketService;
 
 use super::middleware::error::ClientError;
 use super::middleware::user::auth_resolver;
 use super::static_router::static_router;
 use super::store::new_db_pool;
-use super::ticket::router::TicketAppState;
 use super::ticket::service::PgTicketRepository;
 use super::{auth, config, ticket};
 
@@ -123,9 +122,7 @@ pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
     let config = config::get_config();
     let db = new_db_pool(config.db.get_connection(), 1).await?;
 
-    let ticket_state = TicketAppState {
-        ticket_service: TicketService::new(PgTicketRepository::new(db)),
-    };
+    let ticket_service = BaseTicketService::new(PgTicketRepository::new(db));
 
     Ok(Router::new()
         .merge(hello_router())
@@ -134,7 +131,7 @@ pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
             "/tickets",
             ticket::router::ticket_router()
                 // .route_layer(middleware::from_fn(auth::middleware::require_auth))
-                .with_state(ticket_state),
+                .with_state(ticket_service),
         )
         .layer(middleware::map_response(
             super::middleware::request_id::set_request_id,

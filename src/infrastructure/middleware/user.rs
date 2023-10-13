@@ -6,7 +6,7 @@ use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 
 use super::AUTH_TOKEN;
-use crate::domain::errors::Error;
+use crate::domain::error::Error;
 use crate::infrastructure::middleware::error::ClientError;
 
 use crate::infrastructure::context::ctx::UserCtx;

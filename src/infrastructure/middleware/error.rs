@@ -1,4 +1,4 @@
-use crate::domain::errors::Error;
+use crate::domain::error::Error;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use strum_macros::AsRefStr;
