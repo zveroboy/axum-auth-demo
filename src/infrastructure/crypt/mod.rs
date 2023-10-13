@@ -1,1 +1,1 @@
-mod errors;
+mod error;

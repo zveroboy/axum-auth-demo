@@ -1,5 +1,5 @@
 use crate::domain::error::Error;
-use crate::infrastructure::middleware::error::ClientError;
+use crate::infrastructure::middleware::error::AppError;
 use crate::infrastructure::middleware::AUTH_TOKEN;
 use axum::http::StatusCode;
 use axum::routing::post;
@@ -9,7 +9,7 @@ use tower_cookies::{Cookie, Cookies};
 async fn handle_login(
     cookies: Cookies,
     dto: Json<super::dto::LoginDto>,
-) -> Result<StatusCode, ClientError> {
+) -> Result<StatusCode, AppError> {
     // TODO: move to domain
     if dto.email != "demo" || dto.password != "test" {
         return { Err(Error::LoginFail) }?;

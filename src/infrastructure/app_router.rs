@@ -9,7 +9,7 @@ use tracing::info;
 use crate::domain::error::Error;
 use crate::domain::ticket::ticket::BaseTicketService;
 
-use super::middleware::error::ClientError;
+use super::middleware::error::AppError;
 use super::middleware::user::auth_resolver;
 use super::static_router::static_router;
 use super::store::new_db_pool;
@@ -77,7 +77,7 @@ struct HelloParams {
 }
 async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
     // State(user_repo): State<DynUserRepo>,
-) -> Result<String, ClientError> {
+) -> Result<String, AppError> {
     // let user = user_repo.find(user_id).await?;
 
     // Ok(user.into())

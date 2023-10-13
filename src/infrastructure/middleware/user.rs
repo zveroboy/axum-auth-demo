@@ -7,7 +7,7 @@ use tracing::debug;
 
 use super::AUTH_TOKEN;
 use crate::domain::error::Error;
-use crate::infrastructure::middleware::error::ClientError;
+use crate::infrastructure::middleware::error::AppError;
 
 use crate::infrastructure::context::ctx::UserCtx;
 
@@ -15,7 +15,7 @@ pub async fn auth_resolver<B>(
     cookies: Cookies,
     mut req: Request<B>,
     next: Next<B>,
-) -> Result<Response, ClientError> {
+) -> Result<Response, AppError> {
     let auth_cookie = cookies.get(AUTH_TOKEN).ok_or(Error::AuthCookieIsEmpty)?;
     let result_ctx = parse_auth(auth_cookie.value()).map(|(user_id, _, _)| UserCtx::new(user_id));
 
@@ -28,7 +28,7 @@ pub async fn auth_resolver<B>(
     Ok(next.run(req).await)
 }
 
-fn parse_auth(token: &str) -> Result<(u32, String, String), ClientError> {
+fn parse_auth(token: &str) -> Result<(u32, String, String), AppError> {
     debug!(token);
 
     // user-<user_id>.<expiration>.<signature>

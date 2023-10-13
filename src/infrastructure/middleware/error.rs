@@ -1,11 +1,11 @@
-use crate::domain::error::Error;
+use crate::domain::error::Error as DomainError;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use strum_macros::AsRefStr;
 
 #[derive(AsRefStr, Debug, Clone, Copy)]
 #[allow(non_camel_case_types)]
-pub enum ClientError {
+pub enum AppError {
     LOGIN_FAIL(StatusCode),
     NO_AUTH(StatusCode),
     NOT_FOUND(StatusCode),
@@ -13,14 +13,14 @@ pub enum ClientError {
     SERVICE_ERROR(StatusCode),
 }
 
-impl From<Error> for ClientError {
-    fn from(error: Error) -> Self {
+impl From<DomainError> for AppError {
+    fn from(error: DomainError) -> Self {
         match error {
-            Error::LoginFail => Self::LOGIN_FAIL(StatusCode::FORBIDDEN),
-            Error::AuthIsNotProvided | Error::AuthCookieIsEmpty | Error::AuthCookieWrongFormat => {
-                Self::NO_AUTH(StatusCode::FORBIDDEN)
-            }
-            Error::EntityNotFound { .. } => Self::NOT_FOUND(StatusCode::NOT_FOUND),
+            DomainError::LoginFail => Self::LOGIN_FAIL(StatusCode::FORBIDDEN),
+            DomainError::AuthIsNotProvided
+            | DomainError::AuthCookieIsEmpty
+            | DomainError::AuthCookieWrongFormat => Self::NO_AUTH(StatusCode::FORBIDDEN),
+            DomainError::EntityNotFound { .. } => Self::NOT_FOUND(StatusCode::NOT_FOUND),
             _ => Self::SERVICE_ERROR(StatusCode::INTERNAL_SERVER_ERROR),
         }
     }
@@ -42,14 +42,14 @@ impl From<Error> for ClientError {
 //     }
 // }
 
-impl IntoResponse for ClientError {
+impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = match self {
-            ClientError::LOGIN_FAIL(status) => status,
-            ClientError::NO_AUTH(status) => status,
-            ClientError::NOT_FOUND(status) => status,
-            ClientError::INVALID_PARAMS(status) => status,
-            ClientError::SERVICE_ERROR(status) => status,
+            AppError::LOGIN_FAIL(status)
+            | AppError::NO_AUTH(status)
+            | AppError::NOT_FOUND(status)
+            | AppError::INVALID_PARAMS(status)
+            | AppError::SERVICE_ERROR(status) => status,
         };
 
         (status, self.as_ref().to_owned()).into_response()
