@@ -4,7 +4,7 @@ watch-main:
   cargo watch -c -q -w src/ -w .cargo/ -x "run --bin main --config config.docker.toml"
 
 run-dev-db: 
-  cargo run -q --bin dev_db --config config.docker.toml
+  cargo run -q --bin dev_db --config dev-db.docker.toml
 
 test:
   cargo watch -c -q -w src/ -w tests/ -x "test --test hello -q -- --nocapture"
