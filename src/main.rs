@@ -5,6 +5,7 @@ use axum_full_course::{ADDR_PORT, ADDR_URL};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+// TODO: Take from config
 static ADDR: SocketAddr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
 #[tokio::main]

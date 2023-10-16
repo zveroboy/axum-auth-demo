@@ -49,7 +49,14 @@ where
             .await
             .map_err(|_| Error::FailToLogin)?;
 
-        Ok(verify_password(password, &password_hash).is_ok())
+        let result = verify_password(&password, &password_hash);
+
+        println!(
+            "password: {:?} {:?} {:?}",
+            &password, &password_hash, &result
+        );
+
+        Ok(result.is_ok())
     }
 
     async fn register(&self, RegisterParams { email, password }: RegisterParams) -> Result<i64> {

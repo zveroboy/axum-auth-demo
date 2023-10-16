@@ -1,9 +1,9 @@
 [env]
-PGUSER="postgres"
-PGHOST="localhost"
-PGPASSWORD="postgres"
-PGDATABASE="postgres"
-PGPORT="5532"
+PGUSER = "app_user"
+PGHOST = "localhost"
+PGPASSWORD = "dev_only_pwd"
+PGDATABASE = "app_db"
+PGPORT = "5532"
 
-HOST="localhost"
-PORT="3000"
+HOST = "localhost"
+PORT = "3000"

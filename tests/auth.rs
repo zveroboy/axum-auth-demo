@@ -33,23 +33,25 @@ async fn should_register_and_login() -> anyhow::Result<()> {
     let client = Client::new();
 
     let register_dto = RegisterDto {
-        email: "demo_4".to_string(),
+        email: "demo_5".to_string(),
         password: "test".to_string(),
     };
-    let resp = client.post(register_url).json(&register_dto).send().await?;
-    print_resp(&resp);
+    // let resp = client.post(register_url).json(&register_dto).send().await?;
+    // print_resp(&resp);
+    // assert_eq!(resp.status(), StatusCode::OK);
+
+    let login_dto = LoginDto {
+        email: register_dto.email.clone(),
+        password: register_dto.password.clone(),
+    };
+    let resp = client.post(auth_url).json(&login_dto).send().await?;
+
     assert_eq!(resp.status(), StatusCode::OK);
 
-    // let login_dto = LoginDto {
-    //     email: "demo".to_string(),
-    //     password: "test".to_string(),
-    // };
-    // let resp = client.post(auth_url).json(&login_dto).send().await?;
+    let auth_token_res = resp.cookies().find(|cookie| cookie.name() == "auth-token");
+    assert!(auth_token_res.is_some());
 
-    // assert_eq!(resp.status(), StatusCode::OK);
-    // let auth_token_res = resp.cookies().find(|cookie| cookie.name() == "auth-token");
-    // assert!(auth_token_res.is_some());
-    // print_resp(&resp);
+    print_resp(&resp);
 
     // let url: reqwest::Url = format!("http://{:#?}/hello", ADDR).parse()?;
 

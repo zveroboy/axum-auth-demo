@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use futures::Future;
 
 use super::entity::User;
@@ -10,7 +12,7 @@ pub struct CreateParams {
 
 pub trait UserRepository: Sync + Send + Clone {
     fn create(&self, params: CreateParams) -> impl Future<Output = Result<i64>> + Send;
-    fn find_by_email<P: AsRef<str> + Sync + Send>(
+    fn find_by_email<P: AsRef<str> + Sync + Send + Debug>(
         &self,
         email: P,
     ) -> impl Future<Output = Result<User>> + Send;
