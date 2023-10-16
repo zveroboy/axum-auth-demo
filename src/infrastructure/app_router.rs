@@ -15,6 +15,7 @@ use super::middleware::error::AppError;
 use super::middleware::user::auth_resolver;
 use super::static_router::static_router;
 use super::store::new_db_pool;
+use super::ticket::router::BaseTicketAppState;
 use super::ticket::service::PgTicketRepository;
 use super::{auth, config, ticket};
 
@@ -127,6 +128,7 @@ pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
     let user_service = UserService::new(PgUserRepository::new(db.clone()));
 
     let ticket_service = BaseTicketService::new(PgTicketRepository::new(db.clone()));
+    let ticket_app_state = BaseTicketAppState { ticket_service };
 
     Ok(Router::new()
         .merge(hello_router())
@@ -136,9 +138,9 @@ pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
         )
         .nest(
             "/tickets",
-            ticket::router::ticket_router::<BaseTicketService<PgTicketRepository>>()
+            ticket::router::ticket_router()
                 // .route_layer(middleware::from_fn(auth::middleware::require_auth))
-                .with_state(ticket_service),
+                .with_state(ticket_app_state),
         )
         .layer(middleware::map_response(
             super::middleware::request_id::set_request_id,

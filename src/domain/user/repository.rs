@@ -1,4 +1,4 @@
-use async_trait::async_trait;
+use futures::Future;
 
 use super::entity::User;
 use super::error::Result;
@@ -8,8 +8,10 @@ pub struct CreateParams {
     pub password: String,
 }
 
-#[async_trait]
 pub trait UserRepository: Sync + Send + Clone {
-    async fn create(&self, params: CreateParams) -> Result<i64>;
-    // async fn find_by_email<P: AsRef<str>>(&self, email: P) -> Result<User>;
+    fn create(&self, params: CreateParams) -> impl Future<Output = Result<i64>> + Send;
+    fn find_by_email<P: AsRef<str> + Sync + Send>(
+        &self,
+        email: P,
+    ) -> impl Future<Output = Result<User>> + Send;
 }

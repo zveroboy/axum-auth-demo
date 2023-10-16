@@ -1,7 +1,8 @@
+use crate::domain::user::entity::User;
 use crate::domain::user::error::Result;
 use crate::domain::user::repository::{CreateParams, UserRepository};
 use crate::infrastructure::store::Db;
-use async_trait::async_trait;
+use futures::Future;
 
 #[derive(Clone)]
 pub struct PgUserRepository {
@@ -14,11 +15,10 @@ impl PgUserRepository {
     }
 }
 
-#[async_trait]
 impl UserRepository for PgUserRepository {
     async fn create(&self, CreateParams { email, password }: CreateParams) -> Result<i64> {
         dbg!("create: {email}, {password}");
-        let (id,) = sqlx::query_as::<_, (i64,)>(
+        let (id,) = sqlx::query_scalar(
             "INSERT INTO \"user\"(email, password) VALUES ($1, $2) RETURNING id",
         )
         .bind(email)
@@ -29,6 +29,17 @@ impl UserRepository for PgUserRepository {
 
         println!("created: {id}");
         Ok(id)
+    }
+
+    async fn find_by_email<P: AsRef<str> + Sync + Send>(&self, email: P) -> Result<User> {
+        dbg!("find_by_email: {email}");
+        let user: User = sqlx::query_as("SELECT * FROM \"user\" WHERE email=$1 LIMIT = 1")
+            .bind(email.as_ref())
+            .fetch_one(&self.db)
+            .await
+            .unwrap(); // TODO: handle sqlx error
+
+        Ok(user)
     }
 }
 

@@ -1,30 +1,23 @@
-use crate::domain::ticket::ticket::TicketService;
-use crate::infrastructure::auth::service::PgUserRepository;
+use crate::domain::ticket::ticket::BaseTicketService;
 
 use super::handlers::{handle_create_ticket, handle_delete_ticket, handle_list_tickets};
+use super::service::PgTicketRepository;
+use axum::extract::FromRef;
 use axum::routing::{delete, post};
 use axum::Router;
 
-// // TODO: Fix implementation details leaking
-// #[derive(Clone)]
-// pub struct BaseTicketAppState<TR> {
-//     pub ticket_service: BaseTicketService<TR>,
-// }
+#[derive(Clone, FromRef)]
+pub struct BaseTicketAppState {
+    pub ticket_service: BaseTicketService<PgTicketRepository>,
+}
 
-// impl<TR: Clone> FromRef<BaseTicketAppState<TR>> for BaseTicketService<TR> {
-//     fn from_ref(state: &BaseTicketAppState<TR>) -> BaseTicketService<TR> {
-//         state.ticket_service.clone()
-//     }
-// }
+pub fn ticket_router() -> Router<BaseTicketAppState> {
+    type TicketService = BaseTicketService<PgTicketRepository>;
 
-pub fn ticket_router<TS>() -> Router<TS>
-where
-    TS: TicketService + Send + Sync + 'static,
-{
     Router::new()
         .route(
             "/",
-            post(handle_create_ticket::<TS>).get(handle_list_tickets::<TS>),
+            post(handle_create_ticket::<TicketService>).get(handle_list_tickets::<TicketService>),
         )
-        .route("/:id", delete(handle_delete_ticket::<TS>))
+        .route("/:id", delete(handle_delete_ticket::<TicketService>))
 }
