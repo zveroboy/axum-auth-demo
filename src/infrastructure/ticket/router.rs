@@ -19,11 +19,12 @@ use axum::Router;
 
 pub fn ticket_router<TS>() -> Router<TS>
 where
-    TS: TicketService<create_ticket(): Send, list_tickets(): Send> + Send + Sync + 'static,
+    TS: TicketService + Send + Sync + 'static,
 {
-    Router::new().route(
-        "/",
-        post(handle_create_ticket::<TS>).get(handle_list_tickets::<TS>),
-    )
-    // .route("/:id", delete(handle_delete_ticket))
+    Router::new()
+        .route(
+            "/",
+            post(handle_create_ticket::<TS>).get(handle_list_tickets::<TS>),
+        )
+        .route("/:id", delete(handle_delete_ticket::<TS>))
 }

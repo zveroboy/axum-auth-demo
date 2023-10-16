@@ -1,3 +1,4 @@
+use futures::Future;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -18,15 +19,15 @@ pub struct CreateTicket {
 }
 
 pub trait TicketRepository: Sync + Send + Clone {
-    async fn add(&self, ticket: CreateTicket) -> Result<i64>;
+    fn add(&self, ticket: CreateTicket) -> impl Future<Output = Result<i64>> + Send;
 }
 
-pub trait TicketService: Clone {
-    async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64>;
+pub trait TicketService: Sync + Send + Clone {
+    fn create_ticket(&mut self, ticket: CreateTicket) -> impl Future<Output = Result<i64>> + Send;
 
-    async fn list_tickets(&self) -> Result<Vec<Ticket>>;
+    fn list_tickets(&self) -> impl Future<Output = Result<Vec<Ticket>>> + Send;
 
-    async fn delete_ticket(&mut self, id: u32) -> Result<()>;
+    fn delete_ticket(&mut self, id: u32) -> impl Future<Output = Result<()>> + Send;
 }
 
 #[derive(Clone)]
@@ -51,28 +52,32 @@ impl<TR> TicketService for BaseTicketService<TR>
 where
     TR: TicketRepository,
 {
-    async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64> {
-        Ok(self.ticket_repository.add(ticket).await?)
+    fn create_ticket(&mut self, ticket: CreateTicket) -> impl Future<Output = Result<i64>> + Send {
+        async { Ok(self.ticket_repository.add(ticket).await?) }
     }
 
-    async fn list_tickets(&self) -> Result<Vec<Ticket>> {
-        let store = self.ticket_store.lock().await;
+    fn list_tickets(&self) -> impl Future<Output = Result<Vec<Ticket>>> + Send {
+        async {
+            let store = self.ticket_store.lock().await;
 
-        let tickets = store.clone();
+            let tickets = store.clone();
 
-        Ok(tickets)
+            Ok(tickets)
+        }
     }
 
-    async fn delete_ticket(&mut self, id: u32) -> Result<()> {
-        let mut store = self.ticket_store.lock().await;
+    fn delete_ticket(&mut self, id: u32) -> impl Future<Output = Result<()>> + Send {
+        async move {
+            let mut store = self.ticket_store.lock().await;
 
-        let index_to_delete = store
-            .iter()
-            .position(|t| t.id == id)
-            .ok_or(Error::EntityNotFound { id: id.to_string() })?;
+            let index_to_delete = store
+                .iter()
+                .position(|t| t.id == id)
+                .ok_or(Error::EntityNotFound { id: id.to_string() })?;
 
-        store.remove(index_to_delete);
+            store.remove(index_to_delete);
 
-        Ok(())
+            Ok(())
+        }
     }
 }
