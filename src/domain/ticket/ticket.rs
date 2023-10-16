@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -18,13 +17,11 @@ pub struct CreateTicket {
     pub title: String,
 }
 
-#[async_trait]
 pub trait TicketRepository: Sync + Send + Clone {
     async fn add(&self, ticket: CreateTicket) -> Result<i64>;
 }
 
-#[async_trait]
-pub trait TicketService {
+pub trait TicketService: Clone {
     async fn create_ticket(&mut self, ticket: CreateTicket) -> Result<i64>;
 
     async fn list_tickets(&self) -> Result<Vec<Ticket>>;
@@ -50,7 +47,6 @@ where
     }
 }
 
-#[async_trait]
 impl<TR> TicketService for BaseTicketService<TR>
 where
     TR: TicketRepository,

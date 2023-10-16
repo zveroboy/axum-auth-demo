@@ -1,6 +1,7 @@
 
 [alias]
 run-main = "run -q --bin main --config config.docker.toml"
+f = "fmt"
 
 [env]
 RUST_LOG="debug"

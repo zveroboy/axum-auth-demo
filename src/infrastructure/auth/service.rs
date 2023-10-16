@@ -1,28 +1,34 @@
-use crate::domain::error::Result;
-use crate::domain::ticket::ticket::{CreateTicket, TicketRepository};
+use crate::domain::user::error::Result;
+use crate::domain::user::repository::{CreateParams, UserRepository};
 use crate::infrastructure::store::Db;
+use async_trait::async_trait;
 
 #[derive(Clone)]
-pub struct PgTicketRepository {
+pub struct PgUserRepository {
     db: Db,
 }
 
-impl PgTicketRepository {
+impl PgUserRepository {
     pub fn new(db: Db) -> Self {
-        PgTicketRepository { db }
+        Self { db }
     }
 }
 
-impl TicketRepository for PgTicketRepository {
-    async fn add(&self, ticket: CreateTicket) -> Result<i64> {
-        let (id,) = sqlx::query_as::<_, (i64,)>("INSERT INTO task(title) VALUES ($1) RETURNING id")
-            .bind(ticket.title)
-            .fetch_one(&self.db)
-            .await
-            .unwrap();
+#[async_trait]
+impl UserRepository for PgUserRepository {
+    async fn create(&self, CreateParams { email, password }: CreateParams) -> Result<i64> {
+        dbg!("create: {email}, {password}");
+        let (id,) = sqlx::query_as::<_, (i64,)>(
+            "INSERT INTO \"user\"(email, password) VALUES ($1, $2) RETURNING id",
+        )
+        .bind(email)
+        .bind(password)
+        .fetch_one(&self.db)
+        .await
+        .unwrap(); // TODO: handle sqlx error
 
+        println!("created: {id}");
         Ok(id)
-        // sqlx::query("INSERT INTO task(title) VALUES ($1)").fetch(self.db).await?
     }
 }
 

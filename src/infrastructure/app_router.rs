@@ -8,7 +8,9 @@ use tracing::info;
 
 use crate::domain::error::Error;
 use crate::domain::ticket::ticket::BaseTicketService;
+use crate::domain::user::service::UserService;
 
+use super::auth::service::PgUserRepository;
 use super::middleware::error::AppError;
 use super::middleware::user::auth_resolver;
 use super::static_router::static_router;
@@ -81,7 +83,7 @@ async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
     // let user = user_repo.find(user_id).await?;
 
     // Ok(user.into())
-    { Err(Error::LoginFail) }?
+    Err(Error::LoginFail)?
 }
 
 // #[axum::debug_handler]
@@ -122,14 +124,19 @@ pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
     let config = config::get_config();
     let db = new_db_pool(config.db.get_connection(), 1).await?;
 
-    let ticket_service = BaseTicketService::new(PgTicketRepository::new(db));
+    let user_service = UserService::new(PgUserRepository::new(db.clone()));
+
+    let ticket_service = BaseTicketService::new(PgTicketRepository::new(db.clone()));
 
     Ok(Router::new()
         .merge(hello_router())
-        .nest("/auth", auth::router::auth_router())
+        .nest(
+            "/auth",
+            auth::router::auth_router().with_state(user_service),
+        )
         .nest(
             "/tickets",
-            ticket::router::ticket_router()
+            ticket::router::ticket_router::<BaseTicketService<PgTicketRepository>>()
                 // .route_layer(middleware::from_fn(auth::middleware::require_auth))
                 .with_state(ticket_service),
         )

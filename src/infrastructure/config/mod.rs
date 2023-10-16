@@ -1,5 +1,5 @@
-mod db;
-mod util;
+pub mod db;
+pub mod util;
 
 use self::db::DbConfig;
 use self::util::get_env_required;
@@ -19,7 +19,13 @@ impl Config {
     pub fn load_from_env() -> Self {
         Self {
             web_folder: get_env_required("SERVICE_WEB_FOLDER"),
-            db: DbConfig::new(),
+            db: DbConfig::new(
+                get_env_required("PGUSER"),
+                get_env_required("PGHOST"),
+                get_env_required("PGPASSWORD"),
+                get_env_required("PGDATABASE"),
+                get_env_required("PGPORT"),
+            ),
         }
     }
 }

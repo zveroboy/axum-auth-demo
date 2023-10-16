@@ -31,6 +31,8 @@ uuid = { version = "1.4.1", features = ["v4"] }
 sqlx = { version = "0.7.1", features = ["postgres", "uuid", "time", "runtime-tokio-rustls"] }
 tokio-stream = "0.1.14"
 futures = "0.3.28"
+scrypt = "0.11.0"
+base64 = "0.21.4"
 
 [dev-dependencies]
 anyhow = "1.0.75"

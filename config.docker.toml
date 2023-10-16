@@ -4,4 +4,6 @@ PGHOST="localhost"
 PGPASSWORD="postgres"
 PGDATABASE="postgres"
 PGPORT="5532"
+
+HOST="localhost"
 PORT="3000"

@@ -2,8 +2,8 @@
 mod tests {
     use axum::http::StatusCode;
     use axum_full_course::{
-        domain::model::{CreateTicket, Ticket},
-        infrastructure::auth::dto::LoginDto,
+        domain::ticket::ticket::Ticket,
+        infrastructure::{auth::dto::LoginDto, ticket::dto::TicketDto},
         ADDR_PORT, ADDR_URL,
     };
     use reqwest::{Client, Response};
@@ -24,7 +24,7 @@ mod tests {
 
         let tickets_url = format!("http://{:#?}/tickets", ADDR);
 
-        let create_ticket = CreateTicket {
+        let create_ticket = TicketDto {
             title: "demo".to_string(),
         };
 
@@ -58,7 +58,7 @@ mod tests {
 
         let tickets_url = format!("http://{:#?}/tickets", ADDR);
 
-        let create_ticket = CreateTicket {
+        let create_ticket = TicketDto {
             title: "demo".to_string(),
         };
 
@@ -74,6 +74,7 @@ mod tests {
             create_resp,
             Ticket {
                 id: 1,
+                creator_id: 321, // FIXME
                 title: create_ticket.title.clone()
             }
         );
@@ -85,6 +86,7 @@ mod tests {
             after_create_list_resp,
             vec![Ticket {
                 id: 1,
+                creator_id: 321, // FIXME
                 title: create_ticket.title.clone()
             }]
         );

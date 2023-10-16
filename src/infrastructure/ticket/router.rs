@@ -1,13 +1,9 @@
-use crate::domain::ticket::ticket::{CreateTicket, Ticket, TicketService};
-use crate::infrastructure::context::ctx::UserCtx;
-use crate::infrastructure::middleware::error::AppError;
-use axum::extract::{Path, State};
-use axum::http::StatusCode;
-use axum::routing::{delete, post};
-use axum::{Json, Router};
-use tracing::{debug, info};
+use crate::domain::ticket::ticket::TicketService;
+use crate::infrastructure::auth::service::PgUserRepository;
 
-use super::dto::TicketDto;
+use super::handlers::{handle_create_ticket, handle_delete_ticket, handle_list_tickets};
+use axum::routing::{delete, post};
+use axum::Router;
 
 // // TODO: Fix implementation details leaking
 // #[derive(Clone)]
@@ -21,49 +17,13 @@ use super::dto::TicketDto;
 //     }
 // }
 
-async fn handle_create_ticket<TS: TicketService>(
-    UserCtx { user_id }: UserCtx,
-    State(mut ticket_service): State<TS>,
-    Json(dto): Json<TicketDto>,
-) -> Result<Json<i64>, AppError> {
-    let ticket_id = ticket_service
-        .create_ticket(CreateTicket {
-            creator_id: user_id,
-            title: dto.title,
-        })
-        .await?;
-    info!("ticket added {:?}", ticket_id);
-    Ok(ticket_id.into())
-}
-
-async fn handle_list_tickets<TS: TicketService>(
-    _user_ctx: UserCtx,
-    State(ticket_service): State<TS>,
-) -> Result<Json<Vec<Ticket>>, AppError> {
-    debug!(user_id = _user_ctx.user_id);
-    let tickets = ticket_service.list_tickets().await?;
-    Ok(tickets.into())
-}
-
-async fn handle_delete_ticket<TS: TicketService>(
-    _user_ctx: UserCtx,
-    State(mut ticket_service): State<TS>,
-    Path(id): Path<String>,
-) -> StatusCode {
-    let _ = ticket_service
-        .delete_ticket(id.parse().unwrap_or_default())
-        .await;
-    StatusCode::OK
-}
-
 pub fn ticket_router<TS>() -> Router<TS>
 where
-    TS: TicketService + 'static + Clone + Sync + Send,
+    TS: TicketService<create_ticket(): Send, list_tickets(): Send> + Send + Sync + 'static,
 {
-    Router::new()
-        .route(
-            "/",
-            post(handle_create_ticket::<TS>).get(handle_list_tickets::<TS>),
-        )
-        .route("/:id", delete(handle_delete_ticket::<TS>))
+    Router::new().route(
+        "/",
+        post(handle_create_ticket::<TS>).get(handle_list_tickets::<TS>),
+    )
+    // .route("/:id", delete(handle_delete_ticket))
 }

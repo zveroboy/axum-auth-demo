@@ -1,6 +1,7 @@
 #[derive(Clone, Debug)]
 pub enum Error {
-    LoginFail,
+    FailedToBuildPasswordHash,
+    FailToLogin,
 
     AuthIsNotProvided,
     AuthCookieIsEmpty,

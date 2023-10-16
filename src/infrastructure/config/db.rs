@@ -1,5 +1,3 @@
-use super::util::get_env_required;
-
 pub struct DbConfig {
     pub user: String,
     pub host: String,
@@ -9,13 +7,13 @@ pub struct DbConfig {
 }
 
 impl DbConfig {
-    pub fn new() -> Self {
-        let pg_user = get_env_required("PGUSER");
-        let pg_host = get_env_required("PGHOST");
-        let pg_password = get_env_required("PGPASSWORD");
-        let pg_database = get_env_required("PGDATABASE");
-        let pg_port = get_env_required("PGPORT");
-
+    pub fn new(
+        pg_user: String,
+        pg_host: String,
+        pg_password: String,
+        pg_database: String,
+        pg_port: String,
+    ) -> Self {
         Self {
             user: pg_user,
             host: pg_host,

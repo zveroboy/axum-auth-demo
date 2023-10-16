@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, OnceLock}; // use LazyLock::new(|| Client::new())
 
-use axum_full_course::infrastructure::auth::{dto::LoginDto, AUTH_TOKEN};
+use axum_full_course::infrastructure::auth::dto::{LoginDto, RegisterDto};
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 
 use axum::http::{HeaderValue, StatusCode};
@@ -11,47 +11,53 @@ use reqwest::{cookie, Client, ClientBuilder, IntoUrl, Response};
 
 static ADDR: SocketAddr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 
-// static CLIENT: OnceLock<Client> = OnceLock::new();
-
-// fn get_client() -> &'static Client {
-//     CLIENT.get_or_init(|| Client::new())
-// }
-
 fn print_resp(resp: &Response) {
-    println!("{:#?}", resp.headers());
-    println!("{:#?}", resp.cookies().collect::<Vec<_>>());
+    println!("{:#?}", resp);
+    // println!("{:#?}", resp.headers());
+    // println!("{:#?}", resp.cookies().collect::<Vec<_>>());
 }
 
 #[tokio::test]
-async fn should_login() -> anyhow::Result<()> {
-    let url: reqwest::Url = format!("http://{:#?}/auth/login", ADDR).parse()?;
+async fn should_register_and_login() -> anyhow::Result<()> {
+    let register_url: reqwest::Url = format!("http://{:#?}/auth/register", ADDR).parse()?;
 
-    let cookie_provider = Arc::new(cookie::Jar::default());
+    let auth_url: reqwest::Url = format!("http://{:#?}/auth/login", ADDR).parse()?;
 
-    let client = ClientBuilder::new()
-        .cookie_store(true)
-        .cookie_provider(cookie_provider.clone())
-        .build()?;
+    // let cookie_provider = Arc::new(cookie::Jar::default());
 
-    let resp = client
-        .post(url.clone())
-        .json(&LoginDto {
-            email: "demo".to_string(),
-            password: "test".to_string(),
-        })
-        .send()
-        .await?;
+    // let client = ClientBuilder::new()
+    //     .cookie_store(true)
+    //     // .cookie_provider(cookie_provider.clone())
+    //     .build()?;
 
-    assert_eq!(resp.status(), StatusCode::OK);
+    let client = Client::new();
+
+    let register_dto = RegisterDto {
+        email: "demo_4".to_string(),
+        password: "test".to_string(),
+    };
+    let resp = client.post(register_url).json(&register_dto).send().await?;
     print_resp(&resp);
+    assert_eq!(resp.status(), StatusCode::OK);
 
-    let url: reqwest::Url = format!("http://{:#?}/hello", ADDR).parse()?;
+    // let login_dto = LoginDto {
+    //     email: "demo".to_string(),
+    //     password: "test".to_string(),
+    // };
+    // let resp = client.post(auth_url).json(&login_dto).send().await?;
+
+    // assert_eq!(resp.status(), StatusCode::OK);
+    // let auth_token_res = resp.cookies().find(|cookie| cookie.name() == "auth-token");
+    // assert!(auth_token_res.is_some());
+    // print_resp(&resp);
+
+    // let url: reqwest::Url = format!("http://{:#?}/hello", ADDR).parse()?;
 
     // let cookie = &cookie_provider.cookies(&url);
     // println!("{} {:?}", &url, cookie);
 
-    let resp = client.get(url).send().await?;
-    print_resp(&resp);
+    // let resp = client.get(url).send().await?;
+    // print_resp(&resp);
 
     Ok(())
 }

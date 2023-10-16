@@ -1,4 +1,6 @@
+use axum_full_course::infrastructure::config::db::DbConfig;
 use axum_full_course::infrastructure::config::get_config;
+use axum_full_course::infrastructure::config::util::get_env_required;
 use axum_full_course::infrastructure::store::{new_db_pool, Db};
 use futures::stream::{self, StreamExt};
 use std::fmt;
@@ -86,13 +88,31 @@ where
     Ok(())
 }
 
-async fn init_db() -> Result<(), Box<dyn std::error::Error>> {
-    let conf = get_config();
+async fn reset_db() -> Result<(), Box<dyn std::error::Error>> {
+    let db_conf = DbConfig::new(
+        get_env_required("PG_ADMIN_USER"),
+        get_env_required("PGHOST"),
+        get_env_required("PG_ADMIN_PASSWORD"),
+        get_env_required("PG_ADMIN_DATABASE"),
+        get_env_required("PGPORT"),
+    );
 
-    let db = new_db_pool(conf.db.get_connection(), 1).await?;
+    let db = new_db_pool(db_conf.get_connection(), 1).await?;
     process_file(&db, RECREATE_SQL_DIR).await?;
 
-    // let db_with_admin_access = new_db_pool(conf.get_admin_connection()).await?;
+    Ok(())
+}
+
+async fn init_db() -> Result<(), Box<dyn std::error::Error>> {
+    let db_conf = DbConfig::new(
+        get_env_required("PG_USER"),
+        get_env_required("PGHOST"),
+        get_env_required("PG_PASSWORD"),
+        get_env_required("PG_DATABASE"),
+        get_env_required("PGPORT"),
+    );
+
+    let db = new_db_pool(db_conf.get_connection(), 1).await?;
 
     // these queries can be run for different DB users
     let mut paths = fs::read_dir(SQL_DIR)?
@@ -119,6 +139,7 @@ async fn init_db() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    reset_db().await?;
     init_db().await?;
 
     Ok(())

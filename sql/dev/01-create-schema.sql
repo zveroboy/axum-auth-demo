@@ -7,7 +7,7 @@ CREATE TABLE "user" (
   email varchar(128) NOT NULL UNIQUE,
 
   -- Auth
-  password varchar(256),
+  password varchar(256)
 );
 
 

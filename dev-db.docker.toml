@@ -1,0 +1,14 @@
+[env]
+PGHOST="localhost"
+PGPORT="5532"
+
+PG_ADMIN_PASSWORD="postgres"
+PG_ADMIN_USER="postgres"
+PG_ADMIN_DATABASE="postgres"
+
+PG_USER="app_user"
+PG_DATABASE="app_db"
+PG_PASSWORD="dev_only_pwd"
+
+HOST="localhost"
+PORT="3000"

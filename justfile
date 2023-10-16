@@ -7,4 +7,7 @@ run-dev-db:
   cargo run -q --bin dev_db --config config.docker.toml
 
 test:
-  cargo watch -c -q -w tests/ -x "test --tests -q -- --nocapture router_hello"
+  cargo watch -c -q -w src/ -w tests/ -x "test --test hello -q -- --nocapture"
+  
+test-all:
+  cargo watch -c -q -w src/ -w tests/ -x "test --tests -q -- --nocapture router_hello"

@@ -1,14 +1,15 @@
 use async_trait::async_trait;
 
-use super::{entity::User, error::Result};
+use super::entity::User;
+use super::error::Result;
 
 pub struct CreateParams {
-    email: String,
-    password: String,
+    pub email: String,
+    pub password: String,
 }
 
 #[async_trait]
 pub trait UserRepository: Sync + Send + Clone {
     async fn create(&self, params: CreateParams) -> Result<i64>;
-    async fn get(&self, params: u64) -> Result<User>;
+    // async fn find_by_email<P: AsRef<str>>(&self, email: P) -> Result<User>;
 }
