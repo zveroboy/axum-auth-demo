@@ -1,6 +1,8 @@
 use std::net::SocketAddr;
 
 use axum_full_course::infrastructure::app_router::app_router;
+use axum_full_course::infrastructure::config;
+use axum_full_course::infrastructure::store::new_db_pool;
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -21,7 +23,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::fmt::layer().with_target(false))
         .init();
 
-    let router_all = app_router().await?;
+    let config = config::get_config();
+    let db = new_db_pool(config.db.get_connection(), 1).await?;
+
+    let router_all = app_router(config, db);
 
     info!("LISTENING {addr}", addr = ADDR);
 

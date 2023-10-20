@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct DbConfig {
     pub user: String,
     pub host: String,

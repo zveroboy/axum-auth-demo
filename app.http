@@ -14,13 +14,24 @@ GET {{baseUrl}}/hello?name=Xenia HTTP/1.1
 content-type: application/json
 
 ###
+# @name Register
+
+POST {{baseUrl}}/auth/register HTTP/1.1
+content-type: application/json
+
+{
+    "email": "demo18",
+    "password": "test"
+}
+
+###
 # @name Login
 
 POST {{baseUrl}}/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "email": "demo",
+    "email": "demo18",
     "password": "test"
 }
 
@@ -30,6 +41,12 @@ content-type: application/json
 
 GET {{baseUrl}}/tickets HTTP/1.1
 # Cookie: {{authCookie}}
+
+# salt: 83afb7fdd959a58cd67ab4d2de7a7db5, p_hash: 83afb7fdd959a58cd67ab4d2de7a7db5bfbc0dbf7b8a9e44ebd5ae6c2a2f0d177fa3a0c83163ea8efd86daed0067e9d2
+
+# salt: 38336166623766646439353961353863, p_hash: 38336166623766646439353961353863cf903c8d7637c4eed73436a44c649198feccaffaa785b8bc1349778ae3659bee
+
+# 83afb7fdd959a58cd67ab4d2de7a7db5bfbc0dbf7b8a9e44ebd5ae6c2a2f0d177fa3a0c83163ea8efd86daed0067e9d2
 
 ###
 

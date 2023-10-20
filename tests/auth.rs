@@ -33,12 +33,12 @@ async fn should_register_and_login() -> anyhow::Result<()> {
     let client = Client::new();
 
     let register_dto = RegisterDto {
-        email: "demo_5".to_string(),
+        email: "demo_13".to_string(),
         password: "test".to_string(),
     };
-    // let resp = client.post(register_url).json(&register_dto).send().await?;
-    // print_resp(&resp);
-    // assert_eq!(resp.status(), StatusCode::OK);
+    let resp = client.post(register_url).json(&register_dto).send().await?;
+    print_resp(&resp);
+    assert_eq!(resp.status(), StatusCode::OK);
 
     let login_dto = LoginDto {
         email: register_dto.email.clone(),
@@ -51,7 +51,7 @@ async fn should_register_and_login() -> anyhow::Result<()> {
     let auth_token_res = resp.cookies().find(|cookie| cookie.name() == "auth-token");
     assert!(auth_token_res.is_some());
 
-    print_resp(&resp);
+    // print_resp(&resp);
 
     // let url: reqwest::Url = format!("http://{:#?}/hello", ADDR).parse()?;
 

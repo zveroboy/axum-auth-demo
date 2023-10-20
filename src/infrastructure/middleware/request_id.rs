@@ -1,8 +1,27 @@
-use axum::response::{IntoResponse, Response};
-use uuid::Uuid;
+use axum::http::{header::HeaderName, Request, Response};
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
+use tower_http::request_id::{
+    MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer,
+};
 
-pub async fn set_request_id(response: Response) -> impl IntoResponse {
-    let request_id = Uuid::new_v4().to_string();
+// A `MakeRequestId` that increments an atomic counter
+#[derive(Clone, Default)]
+pub struct RequestIdHelper {
+    counter: Arc<AtomicU64>,
+}
 
-    ([("x-request-id", request_id)], response)
+impl MakeRequestId for RequestIdHelper {
+    fn make_request_id<B>(&mut self, request: &Request<B>) -> Option<RequestId> {
+        let request_id = self
+            .counter
+            .fetch_add(1, Ordering::SeqCst)
+            .to_string()
+            .parse()
+            .unwrap();
+
+        Some(RequestId::new(request_id))
+    }
 }

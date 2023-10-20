@@ -4,7 +4,7 @@ use axum::response::IntoResponse;
 use axum::routing::{any_service, MethodRouter};
 use tower_http::services::ServeDir;
 
-use super::config::get_config;
+use crate::infrastructure::config::get_config;
 
 // pub fn static_router() -> Router {
 //     Router::new().nest_service("/", ServeDir::new("./"))

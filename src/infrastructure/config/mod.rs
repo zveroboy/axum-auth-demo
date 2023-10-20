@@ -10,6 +10,7 @@ pub fn get_config() -> &'static Config {
     CONFIG.get_or_init(Config::load_from_env)
 }
 
+#[derive(Clone)]
 pub struct Config {
     pub db: DbConfig,
     pub web_folder: String,

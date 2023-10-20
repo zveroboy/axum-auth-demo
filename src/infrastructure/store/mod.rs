@@ -2,10 +2,10 @@ mod errors;
 
 use self::errors::{Error, Result};
 
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::Duration;
 
-pub type Db = Pool<Postgres>;
+pub type Db = PgPool;
 
 pub async fn new_db_pool<T: AsRef<str>>(db_connect_url: T, max: u32) -> Result<Db> {
     const CONNECTION_TIMEOUT: u64 = 500;

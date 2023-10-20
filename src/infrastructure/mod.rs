@@ -4,6 +4,7 @@ pub mod config;
 pub mod context;
 pub mod crypt;
 pub mod middleware;
-pub mod static_router;
+pub mod rest;
+pub mod state;
 pub mod store;
 pub mod ticket;

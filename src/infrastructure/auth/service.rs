@@ -1,24 +1,26 @@
 use std::fmt::Debug;
 
+use tracing::debug;
+
 use crate::domain::user::entity::User;
 use crate::domain::user::error::Result;
 use crate::domain::user::repository::{CreateParams, UserRepository};
 use crate::infrastructure::store::Db;
 
 #[derive(Clone)]
-pub struct PgUserRepository {
+pub struct SqlxUserRepository {
     db: Db,
 }
 
-impl PgUserRepository {
+impl SqlxUserRepository {
     pub fn new(db: Db) -> Self {
         Self { db }
     }
 }
 
-impl UserRepository for PgUserRepository {
+impl UserRepository for SqlxUserRepository {
     async fn create(&self, CreateParams { email, password }: CreateParams) -> Result<i64> {
-        dbg!("create: {email}, {password}");
+        debug!("create: {email}, {password}");
         let (id,) = sqlx::query_as::<_, (i64,)>(
             "INSERT INTO \"user\"(email, password) VALUES ($1, $2) RETURNING id",
         )
@@ -38,7 +40,7 @@ impl UserRepository for PgUserRepository {
             .bind(email.as_ref())
             .fetch_one(&self.db)
             .await
-            .unwrap(); // TODO: handle sqlx error
+            .unwrap(); // TODO: handle sqlx error, e.g. Err::RowNotFound
 
         Ok(user)
     }

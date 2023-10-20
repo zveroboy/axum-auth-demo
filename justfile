@@ -8,6 +8,9 @@ run-dev-db:
 
 test:
   cargo watch -c -q -w src/ -w tests/ -x "test --test hello -q -- --nocapture"
+
+test-lib:
+  cargo watch -c -q -w src/ -w tests/ -x "test --lib test -q -- --nocapture"
   
 test-all:
-  cargo watch -c -q -w src/ -w tests/ -x "test --tests -q -- --nocapture router_hello"
+  cargo watch -c -q -w src/ -w tests/ -x "test --tests -q -- --nocapture domain::user::service::tests::test_user_login"

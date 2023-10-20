@@ -1,177 +1,81 @@
-use axum::extract::{Path, Query};
+use axum::http::Request;
 use axum::middleware;
-use axum::response::{Html, IntoResponse};
-use axum::{routing::get, Router};
-use serde::Deserialize;
+use axum::Router;
+use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
-use tracing::info;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tower_http::ServiceBuilderExt;
+use tracing::info_span;
 
-use crate::domain::error::Error;
 use crate::domain::ticket::ticket::BaseTicketService;
 use crate::domain::user::service::UserService;
 
-use super::auth::service::PgUserRepository;
-use super::middleware::error::AppError;
+use super::auth::service::SqlxUserRepository;
+use super::config::Config;
+use super::middleware::request_id::RequestIdHelper;
 use super::middleware::user::auth_resolver;
-use super::static_router::static_router;
-use super::store::new_db_pool;
-use super::ticket::router::BaseTicketAppState;
-use super::ticket::service::PgTicketRepository;
-use super::{auth, config, ticket};
-
-// region: Hello world
-
-// #[derive(Deserialize, Debug)]
-// struct DemoParams {
-//     // name: Option<&'a str>,
-//     // #[serde(borrow)]
-//     name: String,
-// }
-
-// impl<'a> Deserialize<'a> for DemoParams<'a>
-// {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: serde::Deserializer<'a> {
-//         todo!()
-//     }
-// }
-
-// #[axum::debug_handler]
-// async fn hello_demo_handler<'a>(Query(mut params): Query<DemoParams>) -> &'a str
-// // async fn hello_demo_handler() -> &'static str
-// // where
-// //     T: 'static,
-// //     for<'a> Q: Query<DemoParams<'a, T>>
-// {
-//     // let params = DemoParams {
-//     //     name: "aaa"
-//     // };
-//     // let res = &params.name;
-//     let res = std::mem::take(&mut params.name);
-//     res.leak()
-//     // params.name.as_str()
-//     // let res = params.name.unwrap_or("world");
-//     // Html(format!("{}", &res))
-//     // Html(format!("Hello, {name}!"))
-// }
-
-// fn hello_demo_handler(Query(params): Query<DemoParams<'static>>) -> impl Future<Output = Response> + 'static
-// // async fn hello_demo_handler() -> &'static str
-// // where
-// //     T: 'static,
-// //     for<'a> Q: Query<DemoParams<'a, T>>
-// {
-//     // let params = DemoParams {
-//     //     name: "aaa"
-//     // };
-//     async move {
-//         let res = params.name.clone();
-//         res.into_response()
-//     }
-//     // let res = params.name.unwrap_or("world");
-//     // Html(format!("{}", &res))
-//     // Html(format!("Hello, {name}!"))
-// }
-
-#[derive(Deserialize, Debug)]
-struct HelloParams {
-    name: Option<String>,
-}
-async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
-    // State(user_repo): State<DynUserRepo>,
-) -> Result<String, AppError> {
-    // let user = user_repo.find(user_id).await?;
-
-    // Ok(user.into())
-    Err(Error::LoginFail)?
-}
-
-// #[axum::debug_handler]
-// #[tracing::instrument(name="handle_hello")]
-async fn handle_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
-    // info!(headers = format!("{headers:#?}"));
-
-    // let cs = cookies.list().iter().fold(String::new(), |acc, c| format!("{}\n{:#?}", acc, c));
-
-    // let span = span!(tracing::Level::INFO, "my_span", cookies = cs);
-
-    // let _ = span.enter();
-
-    let name = params.name.unwrap_or("world".to_string());
-
-    info!(name = name);
-    Html(format!("Hello, {name}!"))
-}
-
-async fn handle_hello_named(Path(name): Path<String>) -> impl IntoResponse {
-    Html(format!("Hello, {name}!"))
-}
-
-pub fn hello_router() -> Router {
-    let router = Router::new();
-
-    router
-        .route("/demo", get(hello_demo_handler))
-        // .route("/hello2/:name", get(hello_named_handler))
-        .route("/hello", get(handle_hello))
-        .route("/hello2/:name", get(handle_hello_named))
-}
-
-// endregion: Hello world
+use super::rest::static_router::static_router;
+use super::state::AppState;
+use super::store::Db;
+use super::ticket::service::SqlxTicketRepository;
+use super::{auth, rest::hello::hello_router, ticket};
 
 // Composition root
-pub async fn app_router() -> Result<Router, Box<dyn std::error::Error>> {
-    let config = config::get_config();
-    let db = new_db_pool(config.db.get_connection(), 1).await?;
+pub fn app_router(config: &Config, db: Db) -> Router {
+    let app_state = AppState {
+        foo: "Bar".to_string(),
+        db: db.clone(),
+    };
 
-    let user_service = UserService::new(PgUserRepository::new(db.clone()));
+    let request_id_service = ServiceBuilder::new()
+        .set_x_request_id(RequestIdHelper::default())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<_>| {
+                    // Log the matched route's path (with placeholders not filled in).
+                    // Use request.uri() or OriginalUri if you want the real path.
+                    let matched_path = request.uri().to_string();
+                    // .extensions()
+                    // .get::<MatchedPath>()
+                    // .map(MatchedPath::as_str);
+                    let headers = request
+                        .headers()
+                        .iter()
+                        // .inspect(|(name, _)| println!("{}", name.as_str()))
+                        .filter(|(name, _)| {
+                            let header_name = name.as_str();
+                            header_name == "x-request-id" || header_name == "cookie"
+                        })
+                        .fold(String::new(), |acc, (name, value)| {
+                            format!("{acc} {name}: {value:#?}")
+                        });
 
-    let ticket_service = BaseTicketService::new(PgTicketRepository::new(db.clone()));
-    let ticket_app_state = BaseTicketAppState { ticket_service };
+                    info_span!(
+                        "request",
+                        method = ?request.method(),
+                        matched_path,
+                        headers = headers
+                        // some_other_field = tracing::field::Empty,
+                    )
+                })
+                .on_request(())
+                .on_response(DefaultOnResponse::new().include_headers(true)),
+        )
+        // propagate `x-request-id` headers from request to response
+        .propagate_x_request_id();
 
-    Ok(Router::new()
+    let user_service = UserService::new(SqlxUserRepository::new(db.clone()));
+
+    Router::new()
         .merge(hello_router())
         .nest(
             "/auth",
             auth::router::auth_router().with_state(user_service),
         )
-        .nest(
-            "/tickets",
-            ticket::router::ticket_router()
-                // .route_layer(middleware::from_fn(auth::middleware::require_auth))
-                .with_state(ticket_app_state),
-        )
-        .layer(middleware::map_response(
-            super::middleware::request_id::set_request_id,
-        ))
+        .nest("/tickets", ticket::router::ticket_router())
         .layer(middleware::from_fn(auth_resolver)) // middleware call order: 1
         .layer(CookieManagerLayer::new()) // middleware call order: 0
-        .layer(
-            tower_http::trace::TraceLayer::new_for_http()
-                // .make_span_with(|request: &Request<_>| {
-                //     // Log the matched route's path (with placeholders not filled in).
-                //     // Use request.uri() or OriginalUri if you want the real path.
-                //     let matched_path = request.uri().to_string();
-                //     // .extensions()
-                //     // .get::<MatchedPath>()
-                //     // .map(MatchedPath::as_str);
-                //     let headers = request
-                //         .headers()
-                //         .iter()
-                //         .fold(String::new(), |acc, (name, value)| {
-                //             format!("{acc} {name}: {value:#?}")
-                //         });
-                //     info_span!(
-                //         "request",
-                //         method = ?request.method(),
-                //         matched_path,
-                //         headers = headers
-                //         // some_other_field = tracing::field::Empty,
-                //     )
-                // })
-                .on_request(())
-                .on_response(()),
-        )
-        .fallback_service(static_router()))
+        .layer(request_id_service)
+        .fallback_service(static_router())
+        .with_state(app_state)
 }
