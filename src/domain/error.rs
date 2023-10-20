@@ -6,8 +6,6 @@ use tracing::info;
 
 #[derive(Clone, Debug)]
 pub enum Error {
-    LoginFail,
-
     AuthIsNotProvided,
     AuthCookieIsEmpty,
     AuthCookieWrongFormat,

@@ -34,7 +34,6 @@ impl From<UserError> for AppError {
 impl From<DomainError> for AppError {
     fn from(error: DomainError) -> Self {
         match error {
-            DomainError::LoginFail => Self::LOGIN_FAIL(StatusCode::FORBIDDEN),
             DomainError::AuthIsNotProvided
             | DomainError::AuthCookieIsEmpty
             | DomainError::AuthCookieWrongFormat => Self::NO_AUTH(StatusCode::FORBIDDEN),

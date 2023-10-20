@@ -1,4 +1,4 @@
-use crate::domain::error::Error;
+use crate::domain::user::error::Error;
 use crate::domain::user::service::{LoginParams, RegisterParams, UserCommands};
 use crate::infrastructure::middleware::error::AppError;
 use crate::infrastructure::middleware::AUTH_TOKEN;
@@ -25,7 +25,7 @@ async fn handle_register<Serv: UserCommands>(
 }
 
 async fn handle_login<Serv: UserCommands>(
-    State(mut user_service): State<Serv>,
+    State(user_service): State<Serv>,
     cookies: Cookies,
     dto: Json<super::dto::LoginDto>,
 ) -> Result<StatusCode, AppError> {
@@ -37,7 +37,7 @@ async fn handle_login<Serv: UserCommands>(
         .await?;
 
     if !matched {
-        return { Err(Error::LoginFail) }?;
+        return { Err(Error::FailToLogin) }?;
     }
 
     // FIXME:
