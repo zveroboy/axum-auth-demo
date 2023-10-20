@@ -1,4 +1,4 @@
-use crate::domain::user::error::Error;
+use crate::domain::user::error::UserError;
 use crate::domain::user::service::{LoginParams, RegisterParams, UserCommands};
 use crate::infrastructure::middleware::error::AppError;
 use crate::infrastructure::middleware::AUTH_TOKEN;
@@ -37,7 +37,7 @@ async fn handle_login<Serv: UserCommands>(
         .await?;
 
     if !matched {
-        return { Err(Error::FailToLogin) }?;
+        return { Err(UserError::FailToLogin) }?;
     }
 
     // FIXME:

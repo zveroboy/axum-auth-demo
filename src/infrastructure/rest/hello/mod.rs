@@ -63,7 +63,7 @@ use serde::Deserialize;
 use tracing::info;
 
 use crate::{
-    domain::user::error::Error,
+    domain::user::error::UserError,
     infrastructure::{middleware::error::AppError, state::AppState},
 };
 
@@ -77,7 +77,7 @@ async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
     // let user = user_repo.find(user_id).await?;
 
     // Ok(user.into())
-    Err(Error::FailToLogin)?
+    Err(UserError::FailToLogin)?
 }
 
 // #[axum::debug_handler]

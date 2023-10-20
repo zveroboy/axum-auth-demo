@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use tracing::debug;
 
 use crate::domain::user::entity::User;
-use crate::domain::user::error::Result;
+use crate::domain::user::error::UserResult;
 use crate::domain::user::repository::{CreateParams, UserRepository};
 use crate::infrastructure::store::Db;
 
@@ -19,7 +19,7 @@ impl SqlxUserRepository {
 }
 
 impl UserRepository for SqlxUserRepository {
-    async fn create(&self, CreateParams { email, password }: CreateParams) -> Result<i64> {
+    async fn create(&self, CreateParams { email, password }: CreateParams) -> UserResult<i64> {
         debug!("create: {email}, {password}");
         let (id,) = sqlx::query_as::<_, (i64,)>(
             "INSERT INTO \"user\"(email, password) VALUES ($1, $2) RETURNING id",
@@ -34,7 +34,10 @@ impl UserRepository for SqlxUserRepository {
         Ok(id)
     }
 
-    async fn find_by_email<P: AsRef<str> + Sync + Send + Debug>(&self, email: P) -> Result<User> {
+    async fn find_by_email<P: AsRef<str> + Sync + Send + Debug>(
+        &self,
+        email: P,
+    ) -> UserResult<User> {
         println!("find_by_email: {:?}", &email);
         let user: User = sqlx::query_as("SELECT * FROM \"user\" WHERE email=$1 LIMIT 1")
             .bind(email.as_ref())

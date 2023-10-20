@@ -11,7 +11,7 @@ use tracing::debug;
 
 use crate::utils::{hex, hex_literal};
 
-use super::error::{Error, Result};
+use super::error::{UserError, UserResult};
 use super::repository::UserRepository;
 use super::{entity::User, repository::CreateParams};
 
@@ -26,9 +26,9 @@ pub struct RegisterParams {
 }
 
 pub trait UserCommands {
-    fn login(&self, params: LoginParams) -> impl Future<Output = Result<bool>> + Send;
+    fn login(&self, params: LoginParams) -> impl Future<Output = UserResult<bool>> + Send;
 
-    fn register(&self, params: RegisterParams) -> impl Future<Output = Result<i64>> + Send;
+    fn register(&self, params: RegisterParams) -> impl Future<Output = UserResult<i64>> + Send;
 
     // async fn confirm(&mut self, id: u32) -> Result<()>;
 }
@@ -89,7 +89,7 @@ impl<Repo: UserRepository> UserCommands for UserService<Repo>
 where
     Repo: UserRepository,
 {
-    async fn login(&self, LoginParams { email, password }: LoginParams) -> Result<bool> {
+    async fn login(&self, LoginParams { email, password }: LoginParams) -> UserResult<bool> {
         let User {
             id: _,
             email: _,
@@ -98,17 +98,20 @@ where
             .repository
             .find_by_email(email)
             .await
-            .map_err(|_| Error::FailToLogin)?;
+            .map_err(|_| UserError::FailToLogin)?;
 
         let password_hash_bytes =
-            hex_literal(password_hash.as_str()).ok_or(Error::IncorrectStoredHashFormat)?;
+            hex_literal(password_hash.as_str()).ok_or(UserError::IncorrectStoredHashFormat)?;
 
         let result = verify_password(&password.as_bytes(), &password_hash_bytes);
 
         Ok(result)
     }
 
-    async fn register(&self, RegisterParams { email, password }: RegisterParams) -> Result<i64> {
+    async fn register(
+        &self,
+        RegisterParams { email, password }: RegisterParams,
+    ) -> UserResult<i64> {
         // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
         let start = Instant::now();
 
@@ -151,7 +154,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::domain::user::{
-        error::Result,
+        error::UserResult,
         repository::{CreateParams, UserRepository},
     };
 
@@ -160,11 +163,11 @@ mod tests {
     #[derive(Clone)]
     struct TestUserRepository;
     impl UserRepository for TestUserRepository {
-        async fn create(&self, _: CreateParams) -> Result<i64> {
+        async fn create(&self, _: CreateParams) -> UserResult<i64> {
             Ok(42)
         }
 
-        async fn find_by_email<P: AsRef<str> + Sync + Send>(&self, _: P) -> Result<User> {
+        async fn find_by_email<P: AsRef<str> + Sync + Send>(&self, _: P) -> UserResult<User> {
             Ok(User {
                 id: 123,
                 email: "aaa@bbb.ccc".to_string(),

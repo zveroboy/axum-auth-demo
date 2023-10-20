@@ -1,5 +1,5 @@
 use crate::domain::error::Error as DomainError;
-use crate::domain::user::error::Error as UserError;
+use crate::domain::user::error::UserError;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use strum_macros::AsRefStr;

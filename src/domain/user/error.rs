@@ -1,5 +1,5 @@
 #[derive(Clone, Debug)]
-pub enum Error {
+pub enum UserError {
     FailedToBuildPasswordHash,
     IncorrectStoredHashFormat,
     FailToLogin,
@@ -11,12 +11,12 @@ pub enum Error {
     EntityNotFound { id: String },
 }
 
-impl std::fmt::Display for Error {
+impl std::fmt::Display for UserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for UserError {}
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type UserResult<T> = core::result::Result<T, UserError>;
