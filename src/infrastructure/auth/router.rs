@@ -11,7 +11,7 @@ use tower_cookies::{Cookie, Cookies};
 use super::dto::RegisterDto;
 
 async fn handle_register<Serv: UserCommands>(
-    State(mut user_service): State<Serv>,
+    State(user_service): State<Serv>,
     Json(dto): Json<RegisterDto>,
 ) -> Result<Json<i64>, AppError> {
     let res = user_service

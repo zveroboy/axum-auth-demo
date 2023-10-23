@@ -16,8 +16,9 @@ path = "src/dev_db.rs"
 [dependencies]
 tokio = { version = "1.32.0", features = ["full"] }
 
+indexmap = { version = "2.0.2", features = ["serde"] }
 serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.105"
+serde_json = { version = "1.0.105", features = ["preserve_order"] }
 
 axum = { version = "0.6.20", features = ["macros"] }
 tower-http = { version = "0.4.4", features = [
@@ -41,6 +42,11 @@ sqlx = { version = "0.7.1", features = [
 tokio-stream = "0.1.14"
 futures = "0.3.28"
 scrypt = "0.11.0"
+hmac = "0.12.1"
+sha2 = "0.10.8"
+
+# Only for educational purpose. Switch to original crate
+base64 = { version = "0.1.1", git = "https://github.com/zveroboy/base64-rs" }
 # base64 = "0.21.4"
 subtle = "2.5"
 tower = "0.4.13"

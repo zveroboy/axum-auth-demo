@@ -12,5 +12,11 @@
       "hostname": "example.com",
     }
   },
-  "rest-client.rememberCookiesForSubsequentRequests": true
+  "rest-client.rememberCookiesForSubsequentRequests": true,
+  "cSpell.words": [
+    "hasher",
+    "hmac",
+    "indexmap",
+    "rsplit"
+  ]
 }

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
 pub fn hex(input: &[u8]) -> String {

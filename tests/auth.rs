@@ -1,13 +1,10 @@
 use std::net::SocketAddr;
-use std::sync::{Arc, OnceLock}; // use LazyLock::new(|| Client::new())
 
 use axum_full_course::infrastructure::auth::dto::{LoginDto, RegisterDto};
 use axum_full_course::{ADDR_PORT, ADDR_URL};
 
-use axum::http::{HeaderValue, StatusCode};
-use reqwest::cookie::CookieStore;
-use reqwest::header::SET_COOKIE;
-use reqwest::{cookie, Client, ClientBuilder, IntoUrl, Response};
+use axum::http::StatusCode;
+use reqwest::{Client, Response};
 
 static ADDR: SocketAddr = SocketAddr::new(ADDR_URL, ADDR_PORT);
 

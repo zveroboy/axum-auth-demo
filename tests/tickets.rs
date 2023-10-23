@@ -20,21 +20,21 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn it_should_not_allow_to_create_ticket_if_not_auth() -> anyhow::Result<()> {
-        let client = Client::new();
+        // let client = Client::new();
 
-        let tickets_url = format!("http://{:#?}/tickets", ADDR);
+        // let tickets_url = format!("http://{:#?}/tickets", ADDR);
 
-        let create_ticket = TicketDto {
-            title: "demo".to_string(),
-        };
+        // let create_ticket = TicketDto {
+        //     title: "demo".to_string(),
+        // };
 
-        let create_resp: Ticket = client
-            .post(tickets_url.clone())
-            .json(&create_ticket)
-            .send()
-            .await?
-            .json()
-            .await?;
+        // let create_resp: Ticket = client
+        //     .post(tickets_url.clone())
+        //     .json(&create_ticket)
+        //     .send()
+        //     .await?
+        //     .json()
+        //     .await?;
 
         Ok(())
     }

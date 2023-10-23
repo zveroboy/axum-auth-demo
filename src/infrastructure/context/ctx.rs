@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct UserCtx {
     pub user_id: u32,

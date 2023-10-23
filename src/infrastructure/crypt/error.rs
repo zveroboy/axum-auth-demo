@@ -6,7 +6,7 @@ use tracing::info;
 
 #[derive(Clone, Debug)]
 pub enum Error {
-    FailToCreatePool(String),
+    // FailToCreatePool(String),
 }
 
 impl std::fmt::Display for Error {
@@ -31,4 +31,4 @@ impl IntoResponse for Error {
 
 // endregion: -- Error
 
-pub type Result<T> = core::result::Result<T, Error>;
+// pub type Result<T> = core::result::Result<T, Error>;

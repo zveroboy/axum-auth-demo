@@ -44,7 +44,6 @@ fn generate_salt() -> [u8; SALT_LENGTH] {
 }
 
 fn hash_password(password: &[u8], salt: &[u8]) -> [u8; SALT_LENGTH + HASH_LENGTH] {
-    let start = Instant::now();
     let mut password_bytes = [0u8; HASH_LENGTH];
 
     // In dev mode tuning of opt-level affect the speed of hashing
@@ -52,8 +51,6 @@ fn hash_password(password: &[u8], salt: &[u8]) -> [u8; SALT_LENGTH + HASH_LENGTH
 
     // This is running on a thread where blocking is fine.
     scrypt(password, salt, &params, &mut password_bytes).unwrap();
-
-    let after_scrypt = start.elapsed();
 
     let hashed_bytes = {
         let mut bytes = [0u8; SALT_LENGTH + HASH_LENGTH];

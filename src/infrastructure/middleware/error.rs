@@ -38,7 +38,7 @@ impl From<DomainError> for AppError {
             | DomainError::AuthCookieIsEmpty
             | DomainError::AuthCookieWrongFormat => Self::NO_AUTH(StatusCode::FORBIDDEN),
             DomainError::EntityNotFound { .. } => Self::NOT_FOUND(StatusCode::NOT_FOUND),
-            _ => Self::SERVICE_ERROR(StatusCode::INTERNAL_SERVER_ERROR),
+            // _ => Self::SERVICE_ERROR(StatusCode::INTERNAL_SERVER_ERROR),
         }
     }
 }

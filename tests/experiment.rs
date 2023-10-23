@@ -1,3 +1,4 @@
+#[allow(dead_code, unused_variables)]
 #[cfg(target_family = "unix")]
 mod rand {
     use std::fs::File;

@@ -10,7 +10,7 @@ test:
   cargo watch -c -q -w src/ -w tests/ -x "test --test hello -q -- --nocapture"
 
 test-lib:
-  cargo watch -c -q -w src/ -w tests/ -x "test --lib test -q -- --nocapture"
+  cargo watch -c -q -w src/ -x "test --lib test -q -- --nocapture infrastructure::auth::jwt::test"
   
 test-all:
-  cargo watch -c -q -w src/ -w tests/ -x "test --tests -q -- --nocapture domain::user::service::tests::test_user_login"
+  cargo watch -c -q -w src/ -w tests/ -x "test --tests -q -- --nocapture infrastructure::auth::jwt::test"

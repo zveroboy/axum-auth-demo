@@ -4,7 +4,7 @@ use crate::infrastructure::middleware::error::AppError;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::Json;
-use tracing::{debug, info};
+use tracing::info;
 
 use super::dto::TicketDto;
 use super::service::BaseTicketAppState;

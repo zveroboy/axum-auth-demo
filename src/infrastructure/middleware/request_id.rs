@@ -1,11 +1,9 @@
-use axum::http::{header::HeaderName, Request, Response};
+use axum::http::Request;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc,
 };
-use tower_http::request_id::{
-    MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer,
-};
+use tower_http::request_id::{MakeRequestId, RequestId};
 
 // A `MakeRequestId` that increments an atomic counter
 #[derive(Clone, Default)]
@@ -14,7 +12,7 @@ pub struct RequestIdHelper {
 }
 
 impl MakeRequestId for RequestIdHelper {
-    fn make_request_id<B>(&mut self, request: &Request<B>) -> Option<RequestId> {
+    fn make_request_id<B>(&mut self, _request: &Request<B>) -> Option<RequestId> {
         let request_id = self
             .counter
             .fetch_add(1, Ordering::SeqCst)

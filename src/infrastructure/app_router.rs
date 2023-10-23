@@ -7,7 +7,6 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tower_http::ServiceBuilderExt;
 use tracing::info_span;
 
-use crate::domain::ticket::ticket::BaseTicketService;
 use crate::domain::user::service::UserService;
 
 use super::auth::service::SqlxUserRepository;
@@ -17,11 +16,10 @@ use super::middleware::user::auth_resolver;
 use super::rest::static_router::static_router;
 use super::state::AppState;
 use super::store::Db;
-use super::ticket::service::SqlxTicketRepository;
 use super::{auth, rest::hello::hello_router, ticket};
 
 // Composition root
-pub fn app_router(config: &Config, db: Db) -> Router {
+pub fn app_router(_config: &Config, db: Db) -> Router {
     let app_state = AppState {
         foo: "Bar".to_string(),
         db: db.clone(),

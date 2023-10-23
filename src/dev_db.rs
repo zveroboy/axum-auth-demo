@@ -1,5 +1,4 @@
 use axum_full_course::infrastructure::config::db::DbConfig;
-use axum_full_course::infrastructure::config::get_config;
 use axum_full_course::infrastructure::config::util::get_env_required;
 use axum_full_course::infrastructure::store::{new_db_pool, Db};
 use futures::stream::{self, StreamExt};
