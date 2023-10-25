@@ -1,10 +1,17 @@
+use std::convert::Infallible;
 use std::fmt::Debug;
+use std::pin::Pin;
 
+use axum::extract::{FromRef, FromRequestParts};
+use axum::http::request::Parts;
+use futures::Future;
+use sqlx::PgPool;
 use tracing::debug;
 
 use crate::domain::user::entity::User;
 use crate::domain::user::error::UserResult;
 use crate::domain::user::repository::{CreateParams, UserRepository};
+use crate::domain::user::service::UserService;
 use crate::infrastructure::store::Db;
 
 #[derive(Clone)]
@@ -49,57 +56,33 @@ impl UserRepository for SqlxUserRepository {
     }
 }
 
-// #[derive(Clone)]
-// pub struct TicketService {
-//     ticket_store: Arc<Mutex<Vec<Ticket>>>,
-//     ticket_repository: dyn TicketRepository,
-// }
+pub type RestUserService = UserService<SqlxUserRepository>;
 
-// impl TicketService {
-//     pub fn new(ticket_repository: dyn TicketRepository) -> Self {
-//         TicketService {
-//             ticket_store: Arc::default(),
-//             ticket_repository
-//         }
-//     }
-// }
+#[derive(Clone, FromRef)]
+pub struct BaseUserAppState {
+    pub user_service: RestUserService,
+}
 
-// impl TicketService {
-//     pub async fn create_ticket(
-//         &mut self,
-//         CreateTicket { title, creator_id }: CreateTicket,
-//     ) -> Result<Ticket> {
-//         let mut store = self.ticket_store.lock().await;
+impl<S: Send + Sync> FromRequestParts<S> for BaseUserAppState
+where
+    PgPool: FromRef<S>,
+{
+    type Rejection = Infallible;
 
-//         let ticket = Ticket {
-//             id: store.len() as u32 + 1,
-//             title,
-//             creator_id,
-//         };
+    fn from_request_parts<'a, 'b, 'at>(
+        _parts: &'a mut Parts,
+        state: &'b S,
+    ) -> Pin<Box<(dyn Future<Output = Result<BaseUserAppState, Self::Rejection>> + Send + 'at)>>
+    where
+        'a: 'at,
+        'b: 'at,
+        Self: 'at,
+    {
+        Box::pin(async {
+            let pool = PgPool::from_ref(state);
+            let user_service = UserService::new(SqlxUserRepository::new(pool.clone()));
 
-//         store.push(ticket.clone());
-
-//         Ok(ticket)
-//     }
-
-//     pub async fn list_tickets(&self) -> Result<Vec<Ticket>> {
-//         let store = self.ticket_store.lock().await;
-
-//         let tickets = store.clone();
-
-//         Ok(tickets)
-//     }
-
-//     pub async fn delete_ticket(&mut self, id: u32) -> Result<()> {
-//         let mut store = self.ticket_store.lock().await;
-
-//         let index_to_delete = store
-//             .iter()
-//             .position(|t| t.id == id)
-//             .ok_or(Error::EntityNotFound { id: id.to_string() })?;
-
-//         store.remove(index_to_delete);
-
-//         Ok(())
-//     }
-// }
+            Ok(BaseUserAppState { user_service })
+        })
+    }
+}

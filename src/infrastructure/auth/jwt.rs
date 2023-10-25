@@ -1,16 +1,20 @@
+use std::{backtrace::Backtrace, time::Instant};
+
+use crate::utils::{hex, hex_literal};
 use base64::{base64_decode, base64url_encode};
 use hmac::{Hmac, Mac};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{from_str, json};
 use sha2::Sha256;
 use subtle::ConstantTimeEq;
+use tracing::debug;
 
 type HmacSha256 = Hmac<Sha256>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum JwtError {
     EncodingError,
-    ParseJwtError,
+    ParseJwtError(Backtrace),
     ParseHeadersError,
     ParseClaimsError,
     VerificationError,
@@ -63,14 +67,20 @@ where
     Claims: Serialize + DeserializeOwned,
 {
     pub fn encode(&self) -> Result<String, JwtError> {
+        let start = Instant::now();
+
         let headers_ser = json!(self.headers).to_string();
         let claims_ser = json!(self.claims).to_string();
+
+        debug!("{}.{}", headers_ser, claims_ser);
 
         let payload = format!(
             "{}.{}",
             base64url_encode(headers_ser.as_bytes(), false),
             base64url_encode(claims_ser.as_bytes(), false)
         );
+
+        debug!("before hashing {:?}", start.elapsed());
 
         // Handle other hashing algorithms
         let mut hasher = Self::new_hasher(self.secret);
@@ -81,17 +91,19 @@ where
         // bytes for providing constant time equality check
         let result = hasher.finalize().into_bytes();
 
+        debug!("after hashing {:?}", start.elapsed());
+
+        debug!("result: {:?}", hex(&result.as_slice()));
+
         let hmac = base64url_encode(&result, false);
 
         Ok(format!("{}.{}", payload, hmac))
     }
 
-    pub fn try_decode<'f, T>(secret: &str, encoded: T) -> Result<Jwt<'_, Claims>, JwtError>
-    where
-        T: AsRef<str>,
-    {
-        let encoded = encoded.as_ref();
-        let (payload, _) = encoded.rsplit_once('.').ok_or(JwtError::ParseJwtError)?;
+    pub fn try_decode<'f>(secret: &'f str, encoded: &str) -> Result<Jwt<'f, Claims>, JwtError> {
+        let (payload, _) = encoded
+            .rsplit_once('.')
+            .ok_or(JwtError::ParseJwtError(Backtrace::capture()))?;
 
         let mut hasher = Self::new_hasher(secret);
 
@@ -112,8 +124,9 @@ where
             .then_some(payload)
             .ok_or(JwtError::VerificationError)
             .map(|payload| -> Result<Jwt<'_, Claims>, JwtError> {
-                let (headers_ser, claims_ser) =
-                    payload.split_once('.').ok_or(JwtError::ParseJwtError)?;
+                let (headers_ser, claims_ser) = payload
+                    .split_once('.')
+                    .ok_or(JwtError::ParseJwtError(Backtrace::capture()))?;
 
                 let headers = base64_decode(headers_ser);
                 let headers = from_str(&headers).map_err(|_| JwtError::ParseHeadersError)?;
@@ -135,6 +148,8 @@ where
 
 #[cfg(test)]
 mod test {
+    // use std::assert_matches::assert_matches;
+
     use indexmap::IndexMap;
     use serde_json::Number;
     use serde_json::Value;
@@ -179,8 +194,12 @@ mod test {
     #[test]
     fn it_should_fail_to_decode_when_wrong_format() {
         let maybe_jwt = Jwt::<'_, IndexMap<String, Value>>::try_decode("secret", "wrong");
-        let err = maybe_jwt.expect_err("Must fail");
-        assert_eq!(err, JwtError::ParseJwtError);
+        // https://github.com/rust-lang/rust/issues/82775
+        // Replace with the following in the future
+        // assert_matches!(err, JwtError::ParseJwtError(_));
+        let JwtError::ParseJwtError(_) = maybe_jwt.expect_err("Must fail") else {
+            panic!("Wrong error");
+        };
     }
 
     #[ignore]
@@ -188,9 +207,12 @@ mod test {
     fn it_should_fail_to_decode_when_invalid_hash() {
         let jwt_encoded = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtvHACKED";
 
-        let err = Jwt::<'_, IndexMap<String, Value>>::try_decode("secret", jwt_encoded)
-            .expect_err("Must fail");
+        let maybe_jwt = Jwt::<'_, IndexMap<String, Value>>::try_decode("secret", jwt_encoded);
 
-        assert_eq!(err, JwtError::VerificationError);
+        match maybe_jwt {
+            Err(JwtError::VerificationError) => {}
+            Err(_) => panic!("Wrong error"),
+            _ => panic!("Must fail"),
+        }
     }
 }

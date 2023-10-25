@@ -60,16 +60,6 @@ where
             let pool = PgPool::from_ref(state);
             let ticket_service = BaseTicketService::new(SqlxTicketRepository::new(pool.clone()));
 
-            // pool
-            // let conn = pool.acquire().await.map_err(internal_error)?;
-
-            // let ctx = parts
-            //     .extensions
-            //     .get::<Result<UserCtx, AppError>>()
-            //     .ok_or(Error::AuthIsNotProvided)?;
-
-            // ctx.clone()
-
             Ok(BaseTicketAppState { ticket_service })
         })
     }

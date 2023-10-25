@@ -7,3 +7,4 @@ PGPORT = "5532"
 
 HOST = "localhost"
 PORT = "3000"
+JWT_SECRET = "secret"

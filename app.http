@@ -20,7 +20,7 @@ POST {{baseUrl}}/auth/register HTTP/1.1
 content-type: application/json
 
 {
-    "email": "demo18",
+    "email": "demo20",
     "password": "test"
 }
 
@@ -31,7 +31,7 @@ POST {{baseUrl}}/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "email": "demo18",
+    "email": "demo20",
     "password": "test"
 }
 

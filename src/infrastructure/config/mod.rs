@@ -13,12 +13,14 @@ pub fn get_config() -> &'static Config {
 #[derive(Clone)]
 pub struct Config {
     pub db: DbConfig,
+    pub jwt_secret: String,
     pub web_folder: String,
 }
 
 impl Config {
     pub fn load_from_env() -> Self {
         Self {
+            jwt_secret: get_env_required("JWT_SECRET"),
             web_folder: get_env_required("SERVICE_WEB_FOLDER"),
             db: DbConfig::new(
                 get_env_required("PGUSER"),

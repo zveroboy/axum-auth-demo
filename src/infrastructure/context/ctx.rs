@@ -1,5 +1,7 @@
 #[allow(dead_code)]
-#[derive(Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserCtx {
     pub user_id: u32,
 }

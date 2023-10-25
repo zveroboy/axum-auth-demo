@@ -1,5 +1,6 @@
 use crate::domain::ticket::ticket::{CreateTicket, Ticket, TicketService};
 use crate::infrastructure::context::ctx::UserCtx;
+// use crate::infrastructure::context::ctx::UserCtx;
 use crate::infrastructure::middleware::error::AppError;
 use axum::extract::Path;
 use axum::http::StatusCode;
@@ -10,13 +11,13 @@ use super::dto::TicketDto;
 use super::service::BaseTicketAppState;
 
 pub async fn handle_create_ticket(
-    // UserCtx { user_id }: UserCtx,
+    UserCtx { user_id }: UserCtx,
     BaseTicketAppState { mut ticket_service }: BaseTicketAppState,
     Json(dto): Json<TicketDto>,
 ) -> Result<Json<i64>, AppError> {
     let ticket_id = ticket_service
         .create_ticket(CreateTicket {
-            creator_id: 123,
+            creator_id: user_id,
             title: dto.title,
         })
         .await?;
@@ -34,7 +35,7 @@ pub async fn handle_list_tickets(
 }
 
 pub async fn handle_delete_ticket(
-    _user_ctx: UserCtx,
+    // _user_ctx: UserCtx,
     BaseTicketAppState { mut ticket_service }: BaseTicketAppState,
     Path(id): Path<String>,
 ) -> StatusCode {

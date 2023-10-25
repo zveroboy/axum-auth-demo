@@ -54,7 +54,7 @@
 // }
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query},
     response::{Html, IntoResponse},
     routing::get,
     Router,
@@ -62,15 +62,14 @@ use axum::{
 use serde::Deserialize;
 use tracing::info;
 
-use crate::{
-    domain::user::error::UserError,
-    infrastructure::{middleware::error::AppError, state::AppState},
-};
+use crate::infrastructure::middleware::error::AppError;
+use crate::{domain::user::error::UserError, infrastructure::state::AppState};
 
 #[derive(Deserialize, Debug)]
 pub struct HelloParams {
     name: Option<String>,
 }
+
 async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
     // State(user_repo): State<DynUserRepo>,
 ) -> Result<String, AppError> {
@@ -82,14 +81,11 @@ async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
 
 // #[axum::debug_handler]
 // #[tracing::instrument(name="handle_hello")]
-async fn handle_hello(
-    State(state): State<AppState>,
-    Query(params): Query<HelloParams>,
-) -> impl IntoResponse {
+async fn handle_hello(Query(params): Query<HelloParams>) -> impl IntoResponse {
     let name = params.name.unwrap_or("world".to_string());
 
     info!(name = name);
-    Html(format!("Hello, {name} from {}!", state.foo))
+    Html(format!("Hello, {name}!"))
 }
 
 async fn handle_hello_named(Path(name): Path<String>) -> impl IntoResponse {

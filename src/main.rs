@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let config = config::get_config();
-    let db = new_db_pool(config.db.get_connection(), 1).await?;
+    let db = new_db_pool(config.db.get_connection().as_str(), 1).await?;
 
     let router_all = app_router(config, db);
 

@@ -7,9 +7,6 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tower_http::ServiceBuilderExt;
 use tracing::info_span;
 
-use crate::domain::user::service::UserService;
-
-use super::auth::service::SqlxUserRepository;
 use super::config::Config;
 use super::middleware::request_id::RequestIdHelper;
 use super::middleware::user::auth_resolver;
@@ -19,9 +16,9 @@ use super::store::Db;
 use super::{auth, rest::hello::hello_router, ticket};
 
 // Composition root
-pub fn app_router(_config: &Config, db: Db) -> Router {
+pub fn app_router(config: &Config, db: Db) -> Router {
     let app_state = AppState {
-        foo: "Bar".to_string(),
+        config: config.clone(),
         db: db.clone(),
     };
 
@@ -62,16 +59,17 @@ pub fn app_router(_config: &Config, db: Db) -> Router {
         // propagate `x-request-id` headers from request to response
         .propagate_x_request_id();
 
-    let user_service = UserService::new(SqlxUserRepository::new(db.clone()));
+    // let auth_cookie_service = middleware::from_fn(auth_resolver);
 
     Router::new()
         .merge(hello_router())
-        .nest(
-            "/auth",
-            auth::router::auth_router().with_state(user_service),
-        )
+        .nest("/auth", auth::router::auth_router())
+        // TODO extract to different service
         .nest("/tickets", ticket::router::ticket_router())
-        .layer(middleware::from_fn(auth_resolver)) // middleware call order: 1
+        .layer(middleware::from_fn_with_state(
+            app_state.clone(),
+            auth_resolver,
+        )) // middleware call order: 1
         .layer(CookieManagerLayer::new()) // middleware call order: 0
         .layer(request_id_service)
         .fallback_service(static_router())

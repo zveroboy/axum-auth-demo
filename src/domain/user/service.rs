@@ -26,7 +26,7 @@ pub struct RegisterParams {
 }
 
 pub trait UserCommands {
-    fn login(&self, params: LoginParams) -> impl Future<Output = UserResult<bool>> + Send;
+    fn login(&self, params: LoginParams) -> impl Future<Output = UserResult<i64>> + Send;
 
     fn register(&self, params: RegisterParams) -> impl Future<Output = UserResult<i64>> + Send;
 
@@ -47,7 +47,10 @@ fn hash_password(password: &[u8], salt: &[u8]) -> [u8; SALT_LENGTH + HASH_LENGTH
     let mut password_bytes = [0u8; HASH_LENGTH];
 
     // In dev mode tuning of opt-level affect the speed of hashing
-    let params = Params::new(14, 8, 1, password_bytes.len()).unwrap();
+    // TODO: get from config
+    // TODO: increase in production
+    let log_n = 10;
+    let params = Params::new(log_n, 8, 1, password_bytes.len()).unwrap();
 
     // This is running on a thread where blocking is fine.
     scrypt(password, salt, &params, &mut password_bytes).unwrap();
@@ -86,9 +89,9 @@ impl<Repo: UserRepository> UserCommands for UserService<Repo>
 where
     Repo: UserRepository,
 {
-    async fn login(&self, LoginParams { email, password }: LoginParams) -> UserResult<bool> {
+    async fn login(&self, LoginParams { email, password }: LoginParams) -> UserResult<i64> {
         let User {
-            id: _,
+            id,
             email: _,
             password: password_hash,
         } = self
@@ -100,9 +103,9 @@ where
         let password_hash_bytes =
             hex_literal(password_hash.as_str()).ok_or(UserError::IncorrectStoredHashFormat)?;
 
-        let result = verify_password(&password.as_bytes(), &password_hash_bytes);
-
-        Ok(result)
+        verify_password(&password.as_bytes(), &password_hash_bytes)
+            .then_some(id)
+            .ok_or(UserError::FailToLogin)
     }
 
     async fn register(
@@ -166,7 +169,7 @@ mod tests {
 
         async fn find_by_email<P: AsRef<str> + Sync + Send>(&self, _: P) -> UserResult<User> {
             Ok(User {
-                id: 123,
+                id: 42,
                 email: "aaa@bbb.ccc".to_string(),
                 password: "5e3d92cd56f042dfb54620c897cea9160fa46507219333cbc73611a100ea68ed7091885994db88afda2d522fdedca423"
                     .to_string(), //  password:"test"
@@ -203,6 +206,6 @@ mod tests {
 
         let result = serv.login(register_params).await.unwrap();
 
-        assert!(result);
+        assert_eq!(result, 42);
     }
 }

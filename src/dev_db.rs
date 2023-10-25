@@ -96,7 +96,7 @@ async fn reset_db() -> Result<(), Box<dyn std::error::Error>> {
         get_env_required("PGPORT"),
     );
 
-    let db = new_db_pool(db_conf.get_connection(), 1).await?;
+    let db = new_db_pool(db_conf.get_connection().as_str(), 1).await?;
     process_file(&db, RECREATE_SQL_DIR).await?;
 
     Ok(())
@@ -111,7 +111,7 @@ async fn init_db() -> Result<(), Box<dyn std::error::Error>> {
         get_env_required("PGPORT"),
     );
 
-    let db = new_db_pool(db_conf.get_connection(), 1).await?;
+    let db = new_db_pool(db_conf.get_connection().as_str(), 1).await?;
 
     // these queries can be run for different DB users
     let mut paths = fs::read_dir(SQL_DIR)?

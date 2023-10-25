@@ -132,7 +132,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
- "base64 0.1.1",
+ "base64 0.1.2",
  "futures",
  "hmac",
  "indexmap 2.0.2",
@@ -184,8 +184,8 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.1.1"
-source = "git+https://github.com/zveroboy/base64-rs#2ee77a893ad9d9c3fbf294449507eea44d4f83dc"
+version = "0.1.2"
+source = "git+https://github.com/zveroboy/base64-rs#270c6674f63b3b736a2c4cc1c0405638ab3ce3bb"
 
 [[package]]
 name = "base64"

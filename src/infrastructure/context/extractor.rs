@@ -4,7 +4,7 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use futures::Future;
 
-use crate::domain::error::Error;
+use crate::domain::user::error::UserError;
 use crate::infrastructure::middleware::error::AppError;
 
 use super::ctx::UserCtx;
@@ -15,19 +15,18 @@ impl<S: Send + Sync> FromRequestParts<S> for UserCtx {
     fn from_request_parts<'a, 'b, 'at>(
         parts: &'a mut Parts,
         _state: &'b S,
-    ) -> Pin<Box<(dyn Future<Output = Result<UserCtx, AppError>> + Send + 'at)>>
+    ) -> Pin<Box<(dyn Future<Output = Result<UserCtx, Self::Rejection>> + Send + 'at)>>
     where
         'a: 'at,
         'b: 'at,
         Self: 'at,
     {
         Box::pin(async {
-            let ctx = parts
-                .extensions
-                .get::<Result<UserCtx, AppError>>()
-                .ok_or(Error::AuthIsNotProvided)?;
+            let maybe_ctx = parts.extensions.get::<Result<UserCtx, UserError>>();
 
-            ctx.clone()
+            let ctx: &Result<UserCtx, UserError> = maybe_ctx.ok_or(UserError::AuthIsNotProvided)?;
+
+            ctx.clone().map_err(|err| err.into())
         })
     }
 }
