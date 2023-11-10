@@ -21,9 +21,9 @@ pub async fn auth_resolver<B>(
     mut req: Request<B>,
     next: Next<B>,
 ) -> Result<Response, Infallible> {
-    let auth_cookie_result = cookies.get(AUTH_TOKEN).ok_or(UserError::AuthCookieIsEmpty);
-
-    let result_ctx = auth_cookie_result
+    let result_ctx = cookies
+        .get(AUTH_TOKEN)
+        .ok_or(UserError::AuthCookieIsEmpty)
         .and_then(|auth_cookie| {
             Jwt::<'_, UserCtx>::try_decode(&state.config.jwt_secret, auth_cookie.value())
                 .map_err(|_| UserError::AuthCookieWrongFormat)
