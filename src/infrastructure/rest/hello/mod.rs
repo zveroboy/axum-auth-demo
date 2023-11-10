@@ -1,11 +1,23 @@
 // region: Hello world
 
-// #[derive(Deserialize, Debug)]
-// struct DemoParams {
-//     // name: Option<&'a str>,
-//     // #[serde(borrow)]
-//     name: String,
-// }
+use axum::{
+    extract::{Path, Query},
+    response::{Html, IntoResponse},
+    routing::get,
+    Router,
+};
+use serde::Deserialize;
+use tracing::info;
+
+use crate::infrastructure::middleware::error::AppError;
+use crate::{domain::user::error::UserError, infrastructure::state::AppState};
+
+#[derive(Deserialize, Debug)]
+struct DemoParams {
+    // name: Option<&'a str>,
+    // #[serde(borrow)]
+    name: String,
+}
 
 // impl<'a> Deserialize<'a> for DemoParams<'a>
 // {
@@ -16,24 +28,19 @@
 //     }
 // }
 
-// #[axum::debug_handler]
-// async fn hello_demo_handler<'a>(Query(mut params): Query<DemoParams>) -> &'a str
-// // async fn hello_demo_handler() -> &'static str
-// // where
-// //     T: 'static,
-// //     for<'a> Q: Query<DemoParams<'a, T>>
-// {
-//     // let params = DemoParams {
-//     //     name: "aaa"
-//     // };
-//     // let res = &params.name;
-//     let res = std::mem::take(&mut params.name);
-//     res.leak()
-//     // params.name.as_str()
-//     // let res = params.name.unwrap_or("world");
-//     // Html(format!("{}", &res))
-//     // Html(format!("Hello, {name}!"))
-// }
+#[axum::debug_handler]
+async fn hello_demo_handler(Query(params): Query<DemoParams>) -> impl IntoResponse {
+    // let params = DemoParams {
+    //     name: "aaa"
+    // };
+    let res = params.name;
+    // let res = std::mem::take(&mut params.name);
+    // res.leak()
+    // params.name.as_str()
+    // let res = params.name.unwrap_or("world");
+    Html(format!("{}", &res))
+    // Html(format!("Hello, {name}!"))
+}
 
 // fn hello_demo_handler(Query(params): Query<DemoParams<'static>>) -> impl Future<Output = Response> + 'static
 // // async fn hello_demo_handler() -> &'static str
@@ -53,30 +60,18 @@
 //     // Html(format!("Hello, {name}!"))
 // }
 
-use axum::{
-    extract::{Path, Query},
-    response::{Html, IntoResponse},
-    routing::get,
-    Router,
-};
-use serde::Deserialize;
-use tracing::info;
+// async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
+//     // State(user_repo): State<DynUserRepo>,
+// ) -> Result<String, AppError> {
+//     // let user = user_repo.find(user_id).await?;
 
-use crate::infrastructure::middleware::error::AppError;
-use crate::{domain::user::error::UserError, infrastructure::state::AppState};
+//     // Ok(user.into())
+//     Err(UserError::FailToLogin)?
+// }
 
 #[derive(Deserialize, Debug)]
 pub struct HelloParams {
     name: Option<String>,
-}
-
-async fn hello_demo_handler(// Path(user_id): Path<Uuid>,
-    // State(user_repo): State<DynUserRepo>,
-) -> Result<String, AppError> {
-    // let user = user_repo.find(user_id).await?;
-
-    // Ok(user.into())
-    Err(UserError::FailToLogin)?
 }
 
 // #[axum::debug_handler]
